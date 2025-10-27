@@ -7,7 +7,7 @@ import { scale } from '@/src/constants/responsive';
 import { useFontSize } from '@/src/hooks/useFontSize';
 import { setSelectedLanguage, setSelectedLanguageInfo } from '@/src/redux/features/userPreferences';
 import { callApiMethod } from '@/src/redux/services/callApimethod';
-import { useAddToFavoritesMutation, useLazyGetChaptersQuery, useLazyGetVersesQuery, useRemoveFromFavoritesMutation } from '@/src/redux/services/modules/userApi';
+import { useAddToFavoritesMutation, useLazyGetChaptersQuery, useLazyGetStoriesQuery, useLazyGetVersesQuery, useRemoveFromFavoritesMutation } from '@/src/redux/services/modules/userApi';
 import { cleanHtmlContent } from '@/src/utils/htmlUtils';
 import { getBestAvailableText } from '@/src/utils/languageUtils';
 import { showErrorToast, showSuccessToast } from '@/src/utils/toast';
@@ -48,6 +48,12 @@ interface Verse {
     isFav?: boolean | any; // Favorite state from API response
 }
 
+interface Story {
+    _id: string;
+    title: MultilingualText | string;
+    // Add other fields as per your API response
+}
+
 interface ChapterData {
     _id: string;
     title: MultilingualText | string;
@@ -61,8 +67,16 @@ export default function ChapterScreen() {
     const storyId = params.storyId as string;
     const storyTitle = params.storyTitle as string;
     const verseId = params.verseId as string;
-    const verseNumber = params.verseNumber as string;
     const chapterId = params.chapterId as string;
+
+    // Debug: Log navigation parameters
+    console.log('📋 ChapterScreen received params:', {
+        storyId: storyId,
+        storyTitle: storyTitle,
+        verseId: verseId,
+        chapterId: chapterId,
+        allParams: params
+    });
 
     // Get selected language and available languages from Redux persist
     const { selectedLanguage, availableLanguages } = useSelector((state: any) => state.userPreferences);
@@ -79,6 +93,7 @@ export default function ChapterScreen() {
 
 
     // API hooks
+    const [getStories, { data: storiesData }] = useLazyGetStoriesQuery();
     const [getChapters, { data, isLoading, error }] = useLazyGetChaptersQuery();
     const [getVerses, { data: versesData, isLoading: versesLoading, error: versesError }] = useLazyGetVersesQuery();
 
@@ -86,7 +101,9 @@ export default function ChapterScreen() {
     const [addToFavorites] = useAddToFavoritesMutation();
     const [removeFromFavorites] = useRemoveFromFavoritesMutation();
 
-    // State for chapters data
+    // State for stories and chapters data
+    const [stories, setStories] = useState<Story[]>([]);
+    const [selectedStory, setSelectedStory] = useState<string>(storyId || '');
     const [chapterData, setChapterData] = useState<ChapterData | null>(null);
     const [verses, setVerses] = useState<Verse[]>([]);
     const [bottomSheetVisible, setBottomSheetVisible] = useState(false);
@@ -127,13 +144,40 @@ export default function ChapterScreen() {
     };
 
 
-    // Fetch chapters on component mount
+    // Fetch stories on component mount
     useEffect(() => {
-        if (storyId) {
-            console.log('📖 Fetching chapters for storyId:', storyId);
-            getChapters(storyId);
+        console.log('📚 Fetching stories');
+        getStories({});
+    }, [getStories]);
+
+    // Fetch chapters when story changes
+    useEffect(() => {
+        if (selectedStory) {
+            console.log('📖 Fetching chapters for storyId:', selectedStory);
+            getChapters(selectedStory);
+            // Reset chapter to first when story changes
+            setCurrentPage(1);
+            setSelectedChapter(1);
         }
-    }, [storyId, getChapters]);
+    }, [selectedStory, getChapters]);
+
+    // Handle stories API response
+    useEffect(() => {
+        if (storiesData) {
+            try {
+                const response = storiesData as any;
+                console.log('📚 Stories API Response:', response);
+
+                if (response.success && response.data) {
+                    const storiesList = response.data || [];
+                    console.log('📚 Stories found:', storiesList.length);
+                    setStories(storiesList);
+                }
+            } catch (error) {
+                console.error('📚 Error processing stories data:', error);
+            }
+        }
+    }, [storiesData]);
 
     // Handle API response
     useEffect(() => {
@@ -244,16 +288,47 @@ export default function ChapterScreen() {
 
             // Auto-filter to specific verse if verseId is provided from favorites navigation
             if (verseId && verseId !== 'undefined' && verseId !== 'null' && !hasAppliedInitialVerseFilter) {
-                console.log('🎯 Auto-filtering to specific verse from favorites:', verseId);
+                console.log('🎯 Auto-filtering to specific verse from favorites:', {
+                    verseId: verseId,
+                    hasAppliedInitialVerseFilter: hasAppliedInitialVerseFilter,
+                    totalVerses: verses.length,
+                    verseIds: verses.map((v: any) => v._id)
+                });
                 setSelectedVerseFilter(verseId);
                 setHasAppliedInitialVerseFilter(true); // Mark that we've applied the initial filter
+                console.log('✅ Verse filter set to:', verseId);
+            } else {
+                console.log('🚫 Not auto-filtering verse:', {
+                    verseId: verseId,
+                    hasAppliedInitialVerseFilter: hasAppliedInitialVerseFilter,
+                    reason: !verseId ? 'No verseId' :
+                        verseId === 'undefined' ? 'verseId is undefined' :
+                            verseId === 'null' ? 'verseId is null' :
+                                hasAppliedInitialVerseFilter ? 'Already applied' : 'Unknown'
+                });
             }
         }
     }, [verses, verseId]);
 
     // Get current chapter data based on order
     const currentChapter = chapterData?.chapters?.find(chapter => chapter.order === currentPage);
-    const displayTitle = getLocalizedText(chapterData?.title || storyTitle, 'Untitled Story');
+
+    // Get selected story title for header
+    const selectedStoryData = stories.find(story => story._id === selectedStory);
+    const displayTitle = selectedStoryData
+        ? getLocalizedText(selectedStoryData.title, 'Untitled Story')
+        : getLocalizedText(chapterData?.title || storyTitle, 'Untitled Story');
+
+    // Debug: Log header title changes
+    console.log('📚 Header Title Debug:', {
+        selectedStory,
+        selectedStoryData: selectedStoryData ? {
+            id: selectedStoryData._id,
+            title: selectedStoryData.title
+        } : null,
+        displayTitle,
+        fallbackTitle: getLocalizedText(chapterData?.title || storyTitle, 'Untitled Story')
+    });
 
     // Fetch verses when current chapter changes
     useEffect(() => {
@@ -292,8 +367,15 @@ export default function ChapterScreen() {
 
         // Filter by selected verse if not "all"
         if (selectedVerseFilter !== 'all') {
+            console.log('🔍 Filtering verses:', {
+                selectedVerseFilter: selectedVerseFilter,
+                totalVerses: verses.length,
+                verseIds: verses.map((v: any) => v._id)
+            });
             filteredVerses = verses.filter((verse: any) => verse._id === selectedVerseFilter);
-            console.log('📜 Filtered to specific verse:', filteredVerses.length, 'verses');
+            console.log('📜 Filtered to specific verse:', filteredVerses.length, 'verses', filteredVerses.map((v: any) => v._id));
+        } else {
+            console.log('📜 Showing all verses:', verses.length);
         }
 
         return filteredVerses.map((verse, index) => ({
@@ -365,6 +447,13 @@ export default function ChapterScreen() {
         setSelectedVerse(null);
     };
 
+    // Story options based on fetched stories
+    const storyOptions = stories.map((story) => ({
+        id: story._id,
+        label: getLocalizedText(story.title, 'Untitled Story'),
+        value: story._id
+    }));
+
     // Language options from Redux persist
     const languageOptions = availableLanguages?.map((lang: any) => ({
         id: lang._id || lang.code,
@@ -398,6 +487,20 @@ export default function ChapterScreen() {
     console.log('📜 Total verses:', verses.length);
     console.log('📜 Verse options:', verseOptions);
     console.log('📜 Selected verse filter:', selectedVerseFilter);
+
+    // Handle story selection
+    const handleStorySelect = (option: { id: string; label: string; value: string }) => {
+        console.log('📚 Story selected:', option.label, option.value);
+
+        setSelectedStory(option.value);
+        // Reset chapter and verse filters when story changes
+        setCurrentPage(1);
+        setSelectedChapter(1);
+        setSelectedVerseFilter('all');
+        setHasAppliedInitialVerseFilter(false);
+
+        console.log('✅ Story updated, header will change to:', option.label);
+    };
 
     // Handle language selection
     const handleLanguageSelect = (option: { id: string; label: string; value: string }) => {
@@ -595,8 +698,8 @@ export default function ChapterScreen() {
                     <TouchableOpacity
                         style={styles.retryButton}
                         onPress={() => {
-                            if (storyId) {
-                                getChapters(storyId);
+                            if (selectedStory) {
+                                getChapters(selectedStory);
                             }
                         }}
                     >
@@ -622,6 +725,13 @@ export default function ChapterScreen() {
 
                     {/* Header Button Fields */}
                     <View style={styles.headerButtonFields}>
+                        <DropdownButton
+                            options={storyOptions}
+                            selectedValue={selectedStory}
+                            onSelect={handleStorySelect}
+                            placeholder="Book"
+                            disabled={isRestrictedMode}
+                        />
                         <DropdownButton
                             options={languageOptions}
                             selectedValue={selectedLanguage}
@@ -735,6 +845,8 @@ export default function ChapterScreen() {
                             verseNumber={selectedVerse.number}
                             isLiked={favoriteVerses.has(selectedVerse.id)}
                             onLike={handleVerseFavorite}
+                            storyTitle={displayTitle}
+                            chapterTitle={getLocalizedText(currentChapter?.title || chapterData?.title, 'Chapter')}
                         />
                     )}
                 </View>

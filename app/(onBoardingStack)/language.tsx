@@ -63,14 +63,11 @@ const LanguageScreen = () => {
 
     const handleDone = () => {
         if (selectedLanguage) {
-            console.log('Selected language:', selectedLanguage);
 
             // Check if user is a paid reader
             if (isPaidReader === true) {
-                console.log('User is paid reader, navigating directly to main app');
                 router.replace('/(tabs)');
             } else {
-                console.log('User needs plan selection, navigating to plan screen');
                 router.push('/(onBoardingStack)/plan');
             }
         }

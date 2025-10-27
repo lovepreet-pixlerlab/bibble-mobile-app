@@ -128,8 +128,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.lightGrey2,
         borderRadius: scale(8),
-        paddingHorizontal: scale(12),
-        paddingVertical: scale(10),
+        paddingHorizontal: scale(10),
+        paddingVertical: scale(8),
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
         minHeight: scale(40), // Ensure minimum height
     },
     buttonFieldText: {
-        fontSize: scale(14),
+        fontSize: scale(12),
         color: colors.primary, // Changed to primary color for better visibility
         fontWeight: '600',
     },
@@ -172,8 +172,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: scale(16),
-        paddingVertical: scale(12),
+        paddingHorizontal: scale(14),
+        paddingVertical: scale(10),
         borderBottomWidth: 1,
         borderBottomColor: colors.lightGrey2,
     },
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary + '10',
     },
     optionText: {
-        fontSize: scale(14),
+        fontSize: scale(12),
         color: colors.textGrey,
         fontWeight: '500',
     },
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     checkmark: {
-        fontSize: scale(16),
+        fontSize: scale(14),
         color: colors.primary,
         fontWeight: 'bold',
     },

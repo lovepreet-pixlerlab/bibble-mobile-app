@@ -260,15 +260,19 @@ export default function LikeScreen() {
   // Handle item press
   const handleItemPress = useCallback((item: FavoriteItem) => {
     if (item.hymnId) {
-      // Navigate to single hymn screen
+      // Navigate to single hymn screen with productId
       const title = getLocalizedText(item.hymnId.productId?.title, 'Unknown Hymn');
-      router.push({
+      const productId = item.hymnId.productId._id;
+      
+      const navigationParams = {
         pathname: '/singleHymn',
         params: {
-          id: item.hymnId._id, // This is the hymn data ID, not verse ID
-          title: title,
-        },
-      });
+          hymnId: productId,  // Use productId._id instead of hymnId._id
+          hymnTitle: title
+        }
+      };
+
+      router.push(navigationParams);
     } else if (item.verseId) {
       // Navigate to chapter screen with verse context
       const storyTitle = getLocalizedText(item.verseId.chapterId.storyId.title, 'Story');

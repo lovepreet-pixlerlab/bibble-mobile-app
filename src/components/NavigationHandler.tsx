@@ -11,10 +11,7 @@ const NavigationHandler = () => {
         const checkAuthAndNavigate = async () => {
             try {
                 const token = await getSession(STORAGE_KEYS.TOKEN);
-                console.log('🔍 Token:', token);
-                console.log('🔍 User:', user);
-                console.log('🔍 Is Authenticated:', isAuthenticated);
-                console.log('🔍 Selected Language:', selectedLanguage);
+
 
                 if (!token) {
                     console.log('🔍 No token, navigating to login');

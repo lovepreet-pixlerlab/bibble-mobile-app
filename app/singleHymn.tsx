@@ -41,13 +41,13 @@ interface HymnData {
 const SingleHymnScreen = () => {
     const dispatch = useDispatch();
     const params = useLocalSearchParams();
-    const hymnId = params.id as string;
-    const hymnTitle = params.title as string;
+    const hymnId = params.id as string || params.hymnId as string; // Handle both naming conventions
+    const hymnTitle = params.title as string || params.hymnTitle as string; // Handle both naming conventions
 
-    // Debug: Log the parameters received
-    console.log('📋 Received params:', params);
-    console.log('🆔 hymnId:', hymnId, 'Type:', typeof hymnId);
-    console.log('📝 hymnTitle:', hymnTitle, 'Type:', typeof hymnTitle);
+
+
+    // Determine navigation source based on parameter names
+    const navigationSource = params.hymnId ? 'search screen' : 'hymns screen';
 
     // Get selected language and available languages from Redux persist
     const { selectedLanguage, availableLanguages } = useSelector((state: any) => state.userPreferences);
@@ -55,10 +55,7 @@ const SingleHymnScreen = () => {
     // Get font size using custom hook
     const { getVerseFontSize } = useFontSize();
 
-    // Debug: Log the selected language and available languages
-    console.log('🌍 Selected Language from Redux Persist:', selectedLanguage || 'en (default)');
-    console.log('🌍 Available Languages from Redux Persist:', availableLanguages?.length || 0, 'languages');
-    console.log('🌍 Available Languages Data:', availableLanguages);
+
 
     // Check if languages are properly persisted
     if (availableLanguages && availableLanguages.length > 0) {
@@ -83,17 +80,23 @@ const SingleHymnScreen = () => {
     // Fetch hymn data on component mount
     useEffect(() => {
         if (hymnId) {
-            console.log('🎯 Calling API with hymnId:', hymnId, 'Type:', typeof hymnId);
             getSingleHymn(hymnId);
+        } else {
+            console.error('❌ SingleHymnScreen - No hymnId provided, cannot fetch hymn data');
         }
     }, [hymnId, getSingleHymn]);
 
     // Handle API response
     useEffect(() => {
+        console.log('📦 SingleHymnScreen - API response useEffect triggered');
+        console.log('📦 SingleHymnScreen - Data received:', data);
+        console.log('📦 SingleHymnScreen - Loading state:', isLoading);
+        console.log('📦 SingleHymnScreen - Error state:', error);
+
         try {
             if (data) {
                 const response = data as any;
-                console.log('📦 Full API Response:', response);
+                console.log('📦 SingleHymnScreen - Full API Response:', response);
 
                 // Validate response structure
                 if (!response || typeof response !== 'object') {
@@ -180,16 +183,36 @@ const SingleHymnScreen = () => {
                     console.log('🔄 Mapped Hymn Data:', mappedHymnData);
                     setHymnData(mappedHymnData);
 
+                    // Debug: Log the product object to see favorite status
+                    console.log('🔍 Product object:', product);
+                    console.log('🔍 Product.isFav:', product?.isFav);
+                    console.log('🔍 All verses favorite status:', allVerses.map((verse: any) => ({
+                        verseId: verse._id,
+                        isFav: verse.isFav
+                    })));
+
                     // Set favorite state based on isFav from API response
-                    if (product?.isFav) {
-                        console.log('❤️ Hymn is already favorited:', product.isFav);
-                        setIsFavorite(true);
-                        setFavoriteId(product.isFav._id || product.isFav.id);
+                    // Check both product and verses for favorite status
+                    let favoriteStatus = product?.isFav;
+                    let favoriteIdValue = null;
+
+                    if (favoriteStatus) {
+                        console.log('❤️ Hymn is already favorited (from product):', favoriteStatus);
+                        favoriteIdValue = favoriteStatus._id || favoriteStatus.id;
                     } else {
-                        console.log('💔 Hymn is not favorited');
-                        setIsFavorite(false);
-                        setFavoriteId(null);
+                        // Check if any verse is favorited
+                        const favoritedVerse = allVerses.find((verse: any) => verse.isFav);
+                        if (favoritedVerse) {
+                            console.log('❤️ Hymn is already favorited (from verse):', favoritedVerse.isFav);
+                            favoriteStatus = favoritedVerse.isFav;
+                            favoriteIdValue = favoriteStatus._id || favoriteStatus.id;
+                        } else {
+                            console.log('💔 Hymn is not favorited');
+                        }
                     }
+
+                    setIsFavorite(!!favoriteStatus);
+                    setFavoriteId(favoriteIdValue);
                 } else {
                     console.log('❌ No data found in response:', response);
                 }
@@ -269,10 +292,8 @@ const SingleHymnScreen = () => {
             // Use hymn-specific processing for proper verse formatting
             const lines = processHymnContentToLines(extractedContent);
 
-            console.log('📝 Final hymn content lines (CLEAN TEXT):', lines);
             return lines;
         } catch (error) {
-            console.error('❌ Error processing hymn content:', error);
             return ['Error processing hymn content. Please try again.'];
         }
     }, [hymnData?.content, currentLanguage]);
@@ -493,7 +514,14 @@ const SingleHymnScreen = () => {
             <View style={styles.footer}>
                 <TouchableOpacity
                     style={[styles.actionButton, isFavorite && styles.favoriteActive]}
-                    onPress={handleFavoritePress}
+                    onPress={() => {
+                        console.log('💖 Favorite button pressed:', {
+                            isFavorite: isFavorite,
+                            favoriteId: favoriteId,
+                            hymnId: hymnId
+                        });
+                        handleFavoritePress();
+                    }}
                 >
                     <Image
                         source={isFavorite ? Icons.activeLike : Icons.inactiveLike}

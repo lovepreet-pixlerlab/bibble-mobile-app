@@ -5,11 +5,10 @@ import { scale } from '@/src/constants/responsive';
 import { setAvailableLanguages, setSelectedLanguage, setSelectedLanguageInfo } from '@/src/redux/features/userPreferences';
 import { useLazyGetLanguagesQuery } from '@/src/redux/services/modules/userApi';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Image,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
@@ -18,7 +17,6 @@ import { useDispatch, useSelector } from 'react-redux';
 
 export default function HomeScreen() {
   const dispatch = useDispatch();
-  const [searchText, setSearchText] = useState('');
 
   // Get current language state from Redux
   const { selectedLanguage } = useSelector((state: any) => state.userPreferences);
@@ -88,17 +86,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search..."
-          placeholderTextColor={colors.textGrey}
-          value={searchText}
-          onChangeText={setSearchText}
-        />
-      </View>
-
       {/* Main Action Buttons */}
       <View style={styles.actionsContainer}>
         {/* Hymns Button */}
@@ -150,18 +137,6 @@ const styles = StyleSheet.create({
     width: scale(24),
     height: scale(24),
     resizeMode: 'contain',
-  },
-  searchContainer: {
-    paddingHorizontal: scale(20),
-    marginBottom: scale(40),
-  },
-  searchInput: {
-    backgroundColor: colors.lightGrey2,
-    borderRadius: scale(8),
-    paddingHorizontal: scale(16),
-    paddingVertical: scale(12),
-    fontSize: scale(16),
-    color: colors.darkGrey,
   },
   actionsContainer: {
     flex: 1,

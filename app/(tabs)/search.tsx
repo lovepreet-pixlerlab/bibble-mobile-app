@@ -123,20 +123,35 @@ export default function SearchScreen() {
   };
 
   const handleHymnPress = (hymn: any) => {
+    console.log('🔍 SearchScreen - handleHymnPress called with hymn:', hymn);
+
     // Save current search term to Redux persist (only if meaningful)
     const trimmedSearch = searchText.trim();
     if (trimmedSearch && trimmedSearch.length >= 2) {
       dispatch(addToSearchHistory(trimmedSearch));
+      console.log('🔍 SearchScreen - Search term saved to history:', trimmedSearch);
     }
 
-    // Navigate to single hymn screen
-    router.push({
+    // Extract hymn title using localization
+    const hymnTitle = getLocalizedText(hymn.product.title, 'Hymn');
+    console.log('🔍 SearchScreen - Extracted hymn title:', hymnTitle);
+    console.log('🔍 SearchScreen - Selected language:', selectedLanguage);
+    console.log('🔍 SearchScreen - Hymn product title object:', hymn.product.title);
+
+    const navigationParams = {
       pathname: '/singleHymn',
       params: {
-        hymnId: hymn._id,
-        hymnTitle: getLocalizedText(hymn.product.title, 'Hymn')
+        hymnId: hymn.product._id,  // Use product._id instead of hymn._id
+        hymnTitle: hymnTitle
       }
-    });
+    };
+
+    console.log('🔍 SearchScreen - Navigation params:', navigationParams);
+    console.log('🔍 SearchScreen - Navigating to singleHymn with productId:', hymn.product._id);
+    console.log('🔍 SearchScreen - Navigation source: search screen');
+
+    // Navigate to single hymn screen
+    router.push(navigationParams);
   };
 
   const handleFilterSelect = (filter: string) => {
@@ -288,32 +303,43 @@ export default function SearchScreen() {
   );
 
   // Hymn Result Component (Inspired Screen Design)
-  const HymnResultItem = ({ hymn }: { hymn: any }) => (
-    <TouchableOpacity
-      style={styles.hymnResultItem}
-      onPress={() => handleHymnPress(hymn)}
-    >
-      <View style={styles.hymnHeader}>
-        <ThemedText style={styles.hymnTitle}>
-          {getLocalizedText(hymn.product.title, 'Hymn')}
-        </ThemedText>
-        <ThemedText style={styles.hymnType}>Hymn</ThemedText>
-      </View>
+  const HymnResultItem = ({ hymn }: { hymn: any }) => {
+    console.log('🔍 SearchScreen - Rendering hymn result item:', hymn);
 
-      <ThemedText style={styles.hymnText} numberOfLines={3}>
-        {getLocalizedText(hymn.text, 'No text available')}
-      </ThemedText>
+    const displayTitle = getLocalizedText(hymn.product.title, 'Hymn');
+    console.log('🔍 SearchScreen - Hymn result display title:', displayTitle);
 
-      <View style={styles.hymnFooter}>
-        <View style={styles.hymnIconContainer}>
-          <Image source={Icons.rythemIcon} style={styles.hymnIcon} />
+    return (
+      <TouchableOpacity
+        style={styles.hymnResultItem}
+        onPress={() => {
+          console.log('🔍 SearchScreen - Hymn result item pressed:', hymn._id);
+          console.log('🔍 SearchScreen - Product ID (will be sent):', hymn.product._id);
+          handleHymnPress(hymn);
+        }}
+      >
+        <View style={styles.hymnHeader}>
+          <ThemedText style={styles.hymnTitle}>
+            {displayTitle}
+          </ThemedText>
+          <ThemedText style={styles.hymnType}>Hymn</ThemedText>
         </View>
-        <ThemedText style={styles.hymnFooterText}>
-          Verse {hymn.number}
+
+        <ThemedText style={styles.hymnText} numberOfLines={3}>
+          {getLocalizedText(hymn.text, 'No text available')}
         </ThemedText>
-      </View>
-    </TouchableOpacity>
-  );
+
+        <View style={styles.hymnFooter}>
+          <View style={styles.hymnIconContainer}>
+            <Image source={Icons.rythemIcon} style={styles.hymnIcon} />
+          </View>
+          <ThemedText style={styles.hymnFooterText}>
+            Verse {hymn.number}
+          </ThemedText>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>

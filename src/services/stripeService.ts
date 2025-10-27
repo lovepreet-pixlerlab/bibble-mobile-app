@@ -32,7 +32,7 @@ export const createOrder = async (amount: number, currency: string = 'usd', prod
                 'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({
-                amount: amount,
+                amount: amount * 100, // Convert dollars to cents for backend
                 currency: currency,
                 productId: productId,
             }),
@@ -137,7 +137,7 @@ export const verifyPayment = async (
                 payment_method_id: paymentMethodId,
                 customer_id: customerId,
                 email: email,
-                amount: amount,
+                amount: amount * 100, // Convert dollars to cents for backend
             }),
         });
 

@@ -22,6 +22,8 @@ interface VerseBottomSheetProps {
     verseNumber: number;
     isLiked: boolean;
     onLike: (verseId: string) => void;
+    storyTitle?: string;
+    chapterTitle?: string;
 }
 
 const { height: screenHeight } = Dimensions.get('window');
@@ -33,13 +35,35 @@ export const VerseBottomSheet: React.FC<VerseBottomSheetProps> = ({
     verseText,
     verseNumber,
     isLiked,
-    onLike
+    onLike,
+    storyTitle,
+    chapterTitle
 }) => {
     const handleCopy = async () => {
         try {
             const { Clipboard } = require('react-native');
-            await Clipboard.setString(verseText);
-            Alert.alert('Copied!', `Verse ${verseNumber} has been copied to clipboard.`);
+
+            // Create enhanced copy text with context information
+            let copyText = verseText;
+
+            if (storyTitle || chapterTitle) {
+                copyText = '';
+
+                if (storyTitle) {
+                    copyText += `${storyTitle}`;
+                }
+
+                if (chapterTitle) {
+                    copyText += storyTitle ? ` - ${chapterTitle}` : chapterTitle;
+                }
+
+                copyText += `\n\nVerse ${verseNumber}:\n${verseText}`;
+            } else {
+                copyText = `Verse ${verseNumber}:\n${verseText}`;
+            }
+
+            await Clipboard.setString(copyText);
+            Alert.alert('Copied!', `Verse ${verseNumber} has been copied to clipboard with context information.`);
         } catch (error) {
             console.error('❌ Failed to copy verse:', error);
             Alert.alert('Error', 'Failed to copy verse to clipboard.');

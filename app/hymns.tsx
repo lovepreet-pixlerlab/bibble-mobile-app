@@ -84,11 +84,13 @@ const HymnsScreen = () => {
             };
 
             const response = await getHymns(params).unwrap() as any;
-            console.log('Response:', response.data[0]);
+
 
             if (response.success) {
                 const newHymns = response.data; // Data is directly an array, not nested under 'hymns'
                 const pagination = response.pagination; // Pagination is at root level
+
+
 
                 if (reset || page === 1) {
                     setHymns(newHymns);
@@ -98,14 +100,23 @@ const HymnsScreen = () => {
 
                 setCurrentPage(pagination.page);
                 setHasNextPage(pagination.hasNextPage);
+
+            } else {
             }
         } catch (error) {
-            console.error('Failed to fetch hymns:', error);
+            console.error('❌ Failed to fetch hymns:', error);
         } finally {
             setIsLoadingMore(false);
             isLoadingMoreRef.current = false;
         }
     }, [getHymns, contentType, sortBy, sortOrder]);
+
+    // Debug: Log loading and error states
+    useEffect(() => {
+        console.log('🎵 Loading state changed:', isLoading);
+        console.log('🎵 Error state:', error);
+        console.log('🎵 Hymns count:', hymns.length);
+    }, [isLoading, error, hymns.length]);
 
     // Load initial hymns only once on mount
     useEffect(() => {
@@ -142,18 +153,26 @@ const HymnsScreen = () => {
     };
 
     const handleHymnPress = (hymn: HymnItem) => {
+
         // Extract title from language object using selected language
         const displayTitle = typeof hymn.title === 'object'
             ? (hymn.title[selectedLanguage] || hymn.title.en || hymn.title.english || Object.values(hymn.title)[0] || 'Untitled')
             : hymn.title;
 
-        router.push({
+
+
+        const navigationParams = {
             pathname: '/singleHymn',
             params: {
                 id: hymn._id,
                 title: displayTitle
             }
-        });
+        };
+
+        console.log('🎵 HymnsScreen - Navigation params:', navigationParams);
+        console.log('🎵 HymnsScreen - Navigating to singleHymn with hymnId:', hymn._id);
+
+        router.push(navigationParams);
     };
 
     // Load more hymns when reaching the end
@@ -171,17 +190,22 @@ const HymnsScreen = () => {
     };
 
     const renderHymnItem = ({ item }: { item: HymnItem }) => {
+        console.log('🎵 HymnsScreen - Rendering hymn item:', item);
+
         // Extract title from language object using selected language
         const displayTitle = typeof item.title === 'object'
             ? (item.title[selectedLanguage] || item.title.en || item.title.english || Object.values(item.title)[0] || 'Untitled')
             : item.title;
 
-        console.log('Selected language:', selectedLanguage, 'Title:', displayTitle);
+        console.log('🎵 HymnsScreen - Render display title:', displayTitle);
 
         return (
             <TouchableOpacity
                 style={styles.hymnItem}
-                onPress={() => handleHymnPress(item)}
+                onPress={() => {
+                    console.log('🎵 HymnsScreen - Hymn item pressed:', item._id);
+                    handleHymnPress(item);
+                }}
             >
                 <ThemedText style={styles.hymnTitle}>{displayTitle}</ThemedText>
                 <Image source={Icons.arrowIcon} style={styles.arrowIcon} />
