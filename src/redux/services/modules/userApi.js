@@ -41,6 +41,13 @@ export const userApi = baseApi.injectEndpoints({
                 body: data,
             }),
         }),
+        // User Remove Favorite API - Dynamic endpoint with favoriteId in path
+        removeFromFavorites: build.mutation({
+            query: (favoriteId) => ({
+                url: `${apiEndPointes.userRemoveFavorite}/${favoriteId}`,
+                method: 'DELETE',
+            }),
+        }),
         // User Update Account API
         updateAccount: build.mutation({
             query: (data) => ({
