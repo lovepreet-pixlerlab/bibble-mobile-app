@@ -14,7 +14,6 @@ export const cleanHtmlContent = (htmlContent: string): string => {
             return '';
         }
 
-        console.log('🧹 Raw HTML content:', htmlContent);
 
         // Clean HTML content to plain text with proper spacing
         let cleaned = htmlContent
@@ -32,10 +31,6 @@ export const cleanHtmlContent = (htmlContent: string): string => {
             .replace(/^\s+|\s+$/g, '') // Trim start and end
             .replace(/[ \t]+/g, ' '); // Replace multiple spaces/tabs with single space (but preserve line breaks)
 
-        console.log('🧹 HTML cleaning:', {
-            original: htmlContent,
-            cleaned: cleaned
-        });
 
         return cleaned;
     } catch (error) {
@@ -178,8 +173,7 @@ export const processHymnContentToLines = (htmlContent: string): string[] => {
             }
         });
 
-        console.log('📝 Hymn content lines processed:', cleanedLines.length, 'lines');
-        console.log('📝 Final hymn lines (CLEAN TEXT):', cleanedLines);
+
 
         return cleanedLines;
     } catch (error) {

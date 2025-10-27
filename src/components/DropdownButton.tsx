@@ -23,6 +23,7 @@ interface DropdownButtonProps {
     onSelect: (option: DropdownOption) => void;
     placeholder?: string;
     displayText?: string;
+    disabled?: boolean;
 }
 
 export const DropdownButton: React.FC<DropdownButtonProps> = ({
@@ -30,7 +31,8 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({
     selectedValue,
     onSelect,
     placeholder = 'Select an option',
-    displayText
+    displayText,
+    disabled = false
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const buttonRef = useRef<View>(null);
@@ -38,17 +40,7 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({
     const selectedOption = options.find(option => option.value === selectedValue);
     const buttonText = displayText || (selectedOption ? selectedOption.label : placeholder);
 
-    // Debug logging
-    console.log('🔍 DropdownButton Debug:', {
-        displayText,
-        selectedValue,
-        selectedOption: selectedOption?.label,
-        placeholder,
-        buttonText,
-        optionsLength: options.length,
-        buttonTextType: typeof buttonText,
-        buttonTextLength: buttonText?.length
-    });
+
 
     const handleSelect = (option: DropdownOption) => {
         onSelect(option);
@@ -56,6 +48,7 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({
     };
 
     const toggleDropdown = () => {
+        if (disabled) return; // Don't open dropdown if disabled
         console.log('🔍 Toggling dropdown:', !isOpen);
         setIsOpen(!isOpen);
     };
@@ -65,15 +58,23 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({
         <View style={styles.dropdownWrapper}>
             <TouchableOpacity
                 ref={buttonRef}
-                style={styles.buttonField}
+                style={[
+                    styles.buttonField,
+                    disabled && styles.disabledButton
+                ]}
                 onPress={toggleDropdown}
+                disabled={disabled}
             >
-                <Text style={styles.buttonFieldText}>{buttonText || 'No Text'}</Text>
+                <Text style={[
+                    styles.buttonFieldText,
+                    disabled && styles.disabledText
+                ]}>{buttonText || 'No Text'}</Text>
                 <Image
                     source={Icons.arrowIcon}
                     style={[
                         styles.buttonFieldIcon,
-                        { transform: [{ rotate: isOpen ? '270deg' : '90deg' }] }
+                        { transform: [{ rotate: isOpen ? '270deg' : '90deg' }] },
+                        disabled && styles.disabledIcon
                     ]}
                     resizeMode='contain'
                 />
@@ -192,5 +193,15 @@ const styles = StyleSheet.create({
         fontSize: scale(16),
         color: colors.primary,
         fontWeight: 'bold',
+    },
+    disabledButton: {
+        backgroundColor: colors.lightGrey2,
+        borderColor: colors.lightGrey,
+    },
+    disabledText: {
+        color: colors.textGrey,
+    },
+    disabledIcon: {
+        tintColor: colors.textGrey,
     },
 });

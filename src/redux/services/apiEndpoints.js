@@ -19,6 +19,10 @@ const apiEndPointes = {
   userChapters: '/user/chapters', // For chapters with storyId in URL path
   userVerses: '/user/verses', // For verses with chapterId in URL path
   userSearch: '/user/search', // For search functionality
+
+  // Payment Endpoints
+  createOrder: '/user/create-order',
+  verifyPayment: '/user/verify-payment',
 };
 
 export { apiEndPointes };

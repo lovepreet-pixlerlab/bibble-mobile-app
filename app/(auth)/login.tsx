@@ -5,6 +5,7 @@ import ThemedInput from '@/src/components/ThemedInput';
 import { colors } from '@/src/constants/Colors';
 import { scale } from '@/src/constants/responsive';
 import { setLoaderStatus } from '@/src/redux/features/global';
+import { setUser } from '@/src/redux/features/user';
 import { callApiMethod } from '@/src/redux/services/callApimethod';
 import { useLoginMutation } from '@/src/redux/services/modules/authApi';
 import { setSession, STORAGE_KEYS } from '@/src/utils/localStorage';
@@ -67,9 +68,17 @@ const LoginScreen = () => {
         showErrorToast(data?.data?.message);
     }
     const onloginSuccess = (data: any) => {
-        // Navigate to language selection
-        router.replace('/(onBoardingStack)/language');
+
+        // Save token to storage
         setSession(STORAGE_KEYS.TOKEN, data.token);
+
+        // Save user data to Redux
+        if (data.data) {
+            dispatch(setUser(data.data));
+        }
+
+        // Always navigate to language screen on login success
+        router.replace('/(onBoardingStack)/language');
     }
 
     const handleLogin = async () => {

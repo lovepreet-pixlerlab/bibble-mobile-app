@@ -1,3 +1,4 @@
+import { getSession, STORAGE_KEYS } from '@/src/utils/localStorage';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
@@ -6,7 +7,6 @@ import { PersistGate } from 'redux-persist/integration/react';
 
 import GlobalLoader from '@/src/components/Loader';
 import { toastConfig } from '@/src/helper/toastConfig';
-import { getSession, STORAGE_KEYS } from '@/src/utils/localStorage';
 import { initStripePayment } from '@/src/utils/stripeInit';
 import Toast from 'react-native-toast-message';
 import { persistor, store } from '../src/redux/store';
@@ -19,20 +19,28 @@ export default function RootLayout() {
   // Initialize Stripe when app starts
   useEffect(() => {
     initStripePayment();
+    console.log('🔍 RootLayout mounted');
   }, []);
 
+  // Simple app startup navigation check
   useEffect(() => {
-    const getToken = async () => {
-      const token = await getSession(STORAGE_KEYS.TOKEN);
-      console.log('🔍 Token:', token);
-      if (!token) {
+    const checkInitialAuth = async () => {
+      try {
+        const token = await getSession(STORAGE_KEYS.TOKEN);
+        console.log('🔍 App startup - Token:', token);
+
+        if (!token) {
+          console.log('🔍 No token, navigating to login');
+          router.push('/(auth)/login');
+        }
+        // If token exists, let the login flow handle navigation
+      } catch (error) {
+        console.error('🔍 App startup navigation error:', error);
         router.push('/(auth)/login');
-      } else {
-        router.replace('/(tabs)')
       }
-    }
-    getToken()
-    console.log('🔍 RootLayout mounted');
+    };
+
+    checkInitialAuth();
   }, []);
 
 

@@ -14,6 +14,7 @@ import {
 import fontSizeSlice from './features/fontSize';
 import globalSlice from './features/global';
 import persistSlice from './features/persist';
+import userSlice from './features/user';
 import userPreferencesSlice from './features/userPreferences';
 import { baseApi } from './services/api';
 
@@ -39,14 +40,23 @@ const fontSizePersistConfig = {
   whitelist: ['verseFontSize'],
 };
 
+// Create a separate persist config for user
+const userPersistConfig = {
+  key: 'user',
+  storage: AsyncStorage,
+  whitelist: ['user', 'isAuthenticated'],
+};
+
 const persistedUserPreferencesReducer = persistReducer(userPreferencesPersistConfig, userPreferencesSlice);
 const persistedFontSizeReducer = persistReducer(fontSizePersistConfig, fontSizeSlice);
+const persistedUserReducer = persistReducer(userPersistConfig, userSlice);
 
 export const store = configureStore({
   reducer: {
     global: globalSlice,
     userPreferences: persistedUserPreferencesReducer,
     fontSize: persistedFontSizeReducer,
+    user: persistedUserReducer,
     persist: persistedReducer,
     [baseApi.reducerPath]: baseApi.reducer,
   },

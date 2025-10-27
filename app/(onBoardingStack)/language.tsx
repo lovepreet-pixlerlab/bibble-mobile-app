@@ -2,6 +2,7 @@ import { ThemedText } from '@/src/components/themed-text';
 import ThemedButton from '@/src/components/ThemedButton';
 import { colors } from '@/src/constants/Colors';
 import { scale } from '@/src/constants/responsive';
+import { useUser } from '@/src/hooks/useUser';
 import {
     setAvailableLanguages,
     setSelectedLanguage as setSelectedLanguageAction,
@@ -16,9 +17,9 @@ import { useDispatch, useSelector } from 'react-redux';
 
 const LanguageScreen = () => {
     const dispatch = useDispatch();
+    const { isPaidReader } = useUser();
     const {
         selectedLanguage: savedLanguage,
-        selectedLanguageInfo: savedLanguageInfo,
         availableLanguages: savedLanguages
     } = useSelector((state: any) => state.userPreferences);
     const [selectedLanguage, setSelectedLanguage] = useState<string | null>(savedLanguage);
@@ -63,7 +64,15 @@ const LanguageScreen = () => {
     const handleDone = () => {
         if (selectedLanguage) {
             console.log('Selected language:', selectedLanguage);
-            router.push('/(onBoardingStack)/plan');
+
+            // Check if user is a paid reader
+            if (isPaidReader === true) {
+                console.log('User is paid reader, navigating directly to main app');
+                router.replace('/(tabs)');
+            } else {
+                console.log('User needs plan selection, navigating to plan screen');
+                router.push('/(onBoardingStack)/plan');
+            }
         }
     };
 

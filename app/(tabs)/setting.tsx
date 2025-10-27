@@ -4,15 +4,21 @@ import ConfirmationModal from '@/src/components/ConfirmationModal';
 import { ThemedText } from '@/src/components/themed-text';
 import { colors } from '@/src/constants/Colors';
 import { scale } from '@/src/constants/responsive';
+import { useUser } from '@/src/hooks/useUser';
+import { clearUser } from '@/src/redux/features/user';
+import { clearUserPreferences } from '@/src/redux/features/userPreferences';
 import { clearSession } from '@/src/utils/localStorage';
 import { showSuccessToast } from '@/src/utils/toast';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch } from 'react-redux';
 
 const SettingScreen = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const dispatch = useDispatch();
+    const { userName, userEmail, isPaidReader } = useUser();
 
     const handleEditProfile = () => {
         console.log('Edit Profile pressed');
@@ -34,6 +40,10 @@ const SettingScreen = () => {
         try {
             // Clear all AsyncStorage data
             await clearSession();
+
+            // Clear Redux state
+            dispatch(clearUser());
+            dispatch(clearUserPreferences());
 
             // Show success message
             showSuccessToast('Logged out successfully');
@@ -68,12 +78,17 @@ const SettingScreen = () => {
                     <View style={styles.profileCard}>
                         <View style={styles.avatarContainer}>
                             <View style={styles.avatar}>
-                                <ThemedText style={styles.avatarText}>J</ThemedText>
+                                <ThemedText style={styles.avatarText}>
+                                    {userName ? userName.charAt(0).toUpperCase() : 'U'}
+                                </ThemedText>
                             </View>
                         </View>
                         <View style={styles.profileInfo}>
-                            <ThemedText style={styles.userName}>James Bond</ThemedText>
-                            <ThemedText style={styles.userEmail}>james.bond@gmail.com</ThemedText>
+                            <ThemedText style={styles.userName}>{userName || 'User'}</ThemedText>
+                            <ThemedText style={styles.userEmail}>{userEmail || 'user@example.com'}</ThemedText>
+                            {isPaidReader && (
+                                <ThemedText style={styles.premiumBadge}>Premium User</ThemedText>
+                            )}
                         </View>
                     </View>
                 </View>
@@ -194,6 +209,12 @@ const styles = StyleSheet.create({
     userEmail: {
         fontSize: scale(14),
         color: '#666666',
+    },
+    premiumBadge: {
+        fontSize: scale(12),
+        color: colors.primary,
+        fontWeight: '600',
+        marginTop: scale(4),
     },
     section: {
         paddingHorizontal: scale(20),

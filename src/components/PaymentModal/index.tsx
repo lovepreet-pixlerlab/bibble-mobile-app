@@ -2,9 +2,9 @@ import { ThemedText } from '@/src/components/themed-text';
 import ThemedButton from '@/src/components/ThemedButton';
 import { colors } from '@/src/constants/Colors';
 import { scale } from '@/src/constants/responsive';
-import { createPaymentIntent } from '@/src/services/stripeService';
-// Stripe imports commented out for demo mode
-// import { useStripe } from '@stripe/stripe-react-native';
+import { useUser } from '@/src/hooks/useUser';
+import { createPaymentIntent, verifyPayment } from '@/src/services/stripeService';
+import { useStripe } from '@stripe/stripe-react-native';
 import React, { useState } from 'react';
 import {
     ActivityIndicator,
@@ -33,74 +33,125 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     planName,
     currency = 'usd',
 }) => {
-    // const { presentPaymentSheet } = useStripe(); // Commented out for demo mode
+    const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const [loading, setLoading] = useState(false);
+    const { userEmail } = useUser();
 
-    const initializePaymentSheet = async () => {
+    const handlePayment = async () => {
         try {
             setLoading(true);
 
-            // Create payment intent (mock data for demo)
+            // Step 1: Create payment intent using backend
+            console.log('Creating payment intent...');
             const response = await createPaymentIntent(amount, currency);
             const { client_secret, customer, ephemeralKey } = response;
-            console.log('client_secret', client_secret);
-            console.log('customer', customer);
-            console.log('ephemeralKey', ephemeralKey);
-            // For demo purposes, show success message instead of actual Stripe payment
-            Alert.alert(
-                'Demo Payment',
-                `Payment of $${amount} for ${planName} would be processed here.\n\nThis is a demo - no actual payment is charged.`,
-                [
-                    {
-                        text: 'Cancel',
-                        style: 'cancel',
-                        onPress: () => {
-                            setLoading(false);
-                        }
-                    },
-                    {
-                        text: 'Complete Demo',
-                        onPress: () => {
-                            setLoading(false);
-                            onSuccess({ amount, planName });
-                            onClose();
-                        }
-                    }
-                ]
-            );
 
-            /* 
-            // Uncomment this when backend is ready:
-            const { error } = await initPaymentSheet({
-                customerId: customer,
-                customerEphemeralKeySecret: ephemeralKey,
+            console.log('Payment intent created:', {
+                client_secret: client_secret ? 'Present' : 'Missing',
+                customer: customer ? 'Present' : 'Missing',
+                ephemeralKey: ephemeralKey ? 'Present' : 'Missing'
+            });
+
+            if (!client_secret) {
+                throw new Error('Missing client_secret from backend');
+            }
+
+            // Step 2: Initialize payment sheet
+            console.log('Initializing payment sheet...');
+            const { error: initError } = await initPaymentSheet({
                 paymentIntentClientSecret: client_secret,
                 merchantDisplayName: 'BibleNest',
                 allowsDelayedPaymentMethods: true,
                 defaultBillingDetails: {
                     name: 'Customer Name',
                 },
-            });
+            } as any);
 
-            if (error) {
-                Alert.alert('Error', error.message);
+            if (initError) {
+                console.error('Payment sheet initialization error:', initError);
+                Alert.alert('Initialization Error', initError.message);
                 setLoading(false);
                 return;
             }
 
-            setPaymentSheetEnabled(true);
-            setLoading(false);
-            */
+            // Step 3: Present the payment sheet
+            console.log('Presenting payment sheet...');
+            const { error } = await presentPaymentSheet();
+
+            if (error) {
+                console.error('Payment sheet error:', error);
+                Alert.alert('Payment Error', error.message);
+                setLoading(false);
+                return;
+            }
+
+            // Payment successful
+            console.log('Payment completed successfully!');
+
+            // Step 4: Verify payment with backend
+            try {
+                console.log('Verifying payment with backend...');
+
+                // Get user email from Redux state
+                const email = userEmail || 'user@example.com'; // Fallback email
+
+                // Call verify payment API
+                const verificationResult = await verifyPayment(
+                    response.paymentIntentId, // payment_intent_id
+                    response.orderId,         // payment_method_id (using orderId as per your requirement)
+                    response.customer,         // customer_id
+                    email,                     // email
+                    amount                    // amount
+                );
+
+                console.log('Payment verification successful:', verificationResult);
+
+                // Payment and verification both successful
+                setLoading(false);
+                onSuccess({
+                    amount,
+                    planName,
+                    paymentIntent: response,
+                    verification: verificationResult
+                });
+                onClose();
+
+            } catch (verificationError) {
+                console.error('Payment verification failed:', verificationError);
+                // Even if verification fails, the payment was successful
+                // You might want to handle this differently based on your business logic
+                Alert.alert(
+                    'Payment Successful',
+                    'Payment completed but verification failed. Please contact support.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => {
+                                setLoading(false);
+                                onSuccess({
+                                    amount,
+                                    planName,
+                                    paymentIntent: response,
+                                    verification: null
+                                });
+                                onClose();
+                            }
+                        }
+                    ]
+                );
+            }
+
         } catch (error) {
-            console.error('Payment sheet initialization failed:', error);
-            Alert.alert('Error', 'Failed to initialize payment');
+            console.error('Payment failed:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Payment failed';
+            Alert.alert('Error', errorMessage);
             setLoading(false);
         }
     };
 
-
-    const handlePayment = async () => {
-        await initializePaymentSheet();
+    const handleClose = () => {
+        setLoading(false);
+        onClose();
     };
 
     return (
@@ -108,7 +159,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <SafeAreaView style={styles.container}>
                 <View style={styles.header}>
                     <ThemedText style={styles.title}>Complete Payment</ThemedText>
-                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                    <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                         <ThemedText style={styles.closeText}>✕</ThemedText>
                     </TouchableOpacity>
                 </View>
@@ -124,13 +175,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     <View style={styles.paymentInfo}>
                         <ThemedText style={styles.infoTitle}>Payment Information</ThemedText>
                         <ThemedText style={styles.infoText}>
-                            • Demo mode - no actual payment will be charged
-                        </ThemedText>
-                        <ThemedText style={styles.infoText}>
-                            • Secure payment processing by Stripe (when backend is ready)
+                            • Secure payment processing by Stripe
                         </ThemedText>
                         <ThemedText style={styles.infoText}>
                             • Your payment information is encrypted
+                        </ThemedText>
+                        <ThemedText style={styles.infoText}>
+                            • Supports cards, Apple Pay, and Google Pay
                         </ThemedText>
                         <ThemedText style={styles.infoText}>
                             • You can cancel anytime
@@ -150,7 +201,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         <View style={styles.loadingContainer}>
                             <ActivityIndicator size="small" color={colors.primary} />
                             <ThemedText style={styles.loadingText}>
-                                Setting up payment...
+                                Processing payment...
                             </ThemedText>
                         </View>
                     )}

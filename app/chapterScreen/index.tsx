@@ -60,6 +60,9 @@ export default function ChapterScreen() {
     const params = useLocalSearchParams();
     const storyId = params.storyId as string;
     const storyTitle = params.storyTitle as string;
+    const verseId = params.verseId as string;
+    const verseNumber = params.verseNumber as string;
+    const chapterId = params.chapterId as string;
 
     // Get selected language and available languages from Redux persist
     const { selectedLanguage, availableLanguages } = useSelector((state: any) => state.userPreferences);
@@ -99,6 +102,8 @@ export default function ChapterScreen() {
     const [selectedVerseFilter, setSelectedVerseFilter] = useState<string>('all');
     const [favoriteVerses, setFavoriteVerses] = useState<Set<string>>(new Set());
     const [favoriteIds, setFavoriteIds] = useState<Map<string, string>>(new Map());
+    const [hasAppliedInitialVerseFilter, setHasAppliedInitialVerseFilter] = useState<boolean>(false);
+    const [isRestrictedMode, setIsRestrictedMode] = useState<boolean>(false);
 
     // Helper function to get text in current language and clean HTML
     const getLocalizedText = (text: MultilingualText | string | undefined, fallback: string = ''): string => {
@@ -152,9 +157,28 @@ export default function ChapterScreen() {
                     });
 
                     setTotalPages(totalChapters);
-                    setCurrentPage(totalChapters > 0 ? 1 : 0); // Reset to first chapter or 0 if no chapters
-                    setSelectedChapter(totalChapters > 0 ? 1 : 0); // Update selected chapter
-                    setSelectedVerseFilter('all'); // Reset to show all verses
+
+                    // If chapterId is provided from favorites navigation, find and navigate to that chapter
+                    if (chapterId && chapterId !== 'undefined' && chapterId !== 'null') {
+                        const targetChapter = chapters.find((chapter: any) => chapter._id === chapterId);
+                        if (targetChapter) {
+                            console.log('🎯 Navigating to specific chapter from favorites:', targetChapter.order);
+                            setCurrentPage(targetChapter.order);
+                            setSelectedChapter(targetChapter.order);
+                            setIsRestrictedMode(true); // Enable restricted mode for favorites navigation
+                        } else {
+                            // Fallback to first chapter if target chapter not found
+                            setCurrentPage(totalChapters > 0 ? 1 : 0);
+                            setSelectedChapter(totalChapters > 0 ? 1 : 0);
+                        }
+                    } else {
+                        // Default behavior - start with first chapter
+                        setCurrentPage(totalChapters > 0 ? 1 : 0);
+                        setSelectedChapter(totalChapters > 0 ? 1 : 0);
+                        setIsRestrictedMode(false); // Normal mode for regular navigation
+                    }
+
+                    setSelectedVerseFilter('all'); // Reset to show all verses initially
                 } else {
                     Alert.alert('Error', response.message || 'Failed to load chapters');
                 }
@@ -163,23 +187,20 @@ export default function ChapterScreen() {
                 Alert.alert('Error', 'Failed to process chapters data');
             }
         }
-    }, [data, storyId, storyTitle]);
+    }, [data, storyId, storyTitle, chapterId]);
 
     // Handle verses API response
     useEffect(() => {
         if (versesData) {
             try {
                 const response = versesData as any;
-                console.log('📦 Verses API Response:', response);
 
                 if (response.success && response.data && response.data.verses) {
                     const versesList = Array.isArray(response.data.verses) ? response.data.verses : [];
-                    console.log('📖 Verses found:', versesList.length);
-                    console.log('📖 Verses data:', versesList);
+
                     setVerses(versesList);
                     setSelectedVerseFilter('all'); // Reset to show all verses when new verses are loaded
                 } else {
-                    console.warn('⚠️ No verses found or API error:', response.message);
                     setVerses([]);
                     setSelectedVerseFilter('all'); // Reset to show all verses
                 }
@@ -220,8 +241,15 @@ export default function ChapterScreen() {
                 favoriteVerses: Array.from(newFavoriteVerses),
                 favoriteIds: Object.fromEntries(newFavoriteIds)
             });
+
+            // Auto-filter to specific verse if verseId is provided from favorites navigation
+            if (verseId && verseId !== 'undefined' && verseId !== 'null' && !hasAppliedInitialVerseFilter) {
+                console.log('🎯 Auto-filtering to specific verse from favorites:', verseId);
+                setSelectedVerseFilter(verseId);
+                setHasAppliedInitialVerseFilter(true); // Mark that we've applied the initial filter
+            }
         }
-    }, [verses]);
+    }, [verses, verseId]);
 
     // Get current chapter data based on order
     const currentChapter = chapterData?.chapters?.find(chapter => chapter.order === currentPage);
@@ -233,13 +261,16 @@ export default function ChapterScreen() {
             console.log('📖 Fetching verses for chapterId:', currentChapter._id);
             // Reset verses to empty array before fetching new ones
             setVerses([]);
-            setSelectedVerseFilter('all'); // Reset to show all verses
+            // Only reset verse filter if we're not coming from favorites navigation
+            if (!verseId || verseId === 'undefined' || verseId === 'null') {
+                setSelectedVerseFilter('all'); // Reset to show all verses
+            }
             getVerses(currentChapter._id);
         } else {
             setVerses([]);
             setSelectedVerseFilter('all'); // Reset to show all verses
         }
-    }, [currentChapter?._id, getVerses]);
+    }, [currentChapter?._id, getVerses, verseId]);
 
     console.log('📖 Current Chapter Info:', {
         currentPage,
@@ -279,6 +310,8 @@ export default function ChapterScreen() {
             const newPage = currentPage - 1;
             setCurrentPage(newPage);
             setSelectedChapter(newPage);
+            setSelectedVerseFilter('all'); // Reset verse filter when navigating chapters
+            setHasAppliedInitialVerseFilter(false); // Reset the flag
         }
     };
 
@@ -287,6 +320,8 @@ export default function ChapterScreen() {
             const newPage = currentPage + 1;
             setCurrentPage(newPage);
             setSelectedChapter(newPage);
+            setSelectedVerseFilter('all'); // Reset verse filter when navigating chapters
+            setHasAppliedInitialVerseFilter(false); // Reset the flag
         }
     };
 
@@ -387,6 +422,8 @@ export default function ChapterScreen() {
 
         setSelectedChapter(chapterNumber);
         setCurrentPage(chapterNumber);
+        setSelectedVerseFilter('all'); // Reset verse filter when changing chapters
+        setHasAppliedInitialVerseFilter(false); // Reset the flag
 
         console.log('✅ Chapter updated:', chapterNumber);
     };
@@ -532,7 +569,7 @@ export default function ChapterScreen() {
                         <Image source={Icons.backIcon} style={styles.backIcon} resizeMode='contain' />
                     </TouchableOpacity>
                     <ThemedText style={styles.headerTitle}>Loading...</ThemedText>
-                    <View style={styles.shareButton} />
+                    <View style={styles.headerSpacer} />
                 </View>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary} />
@@ -551,7 +588,7 @@ export default function ChapterScreen() {
                         <Image source={Icons.backIcon} style={styles.backIcon} resizeMode='contain' />
                     </TouchableOpacity>
                     <ThemedText style={styles.headerTitle}>Error</ThemedText>
-                    <View style={styles.shareButton} />
+                    <View style={styles.headerSpacer} />
                 </View>
                 <View style={styles.errorContainer}>
                     <ThemedText style={styles.errorText}>Failed to load chapters</ThemedText>
@@ -580,9 +617,7 @@ export default function ChapterScreen() {
                             <Image source={Icons.backIcon} style={styles.backIcon} resizeMode='contain' />
                         </TouchableOpacity>
                         <ThemedText style={styles.headerTitle}>{displayTitle}</ThemedText>
-                        <TouchableOpacity style={styles.shareButton}>
-                            <Image source={Icons.shareIcon} style={styles.shareIcon} resizeMode='contain' />
-                        </TouchableOpacity>
+                        <View style={styles.headerSpacer} />
                     </View>
 
                     {/* Header Button Fields */}
@@ -592,30 +627,36 @@ export default function ChapterScreen() {
                             selectedValue={selectedLanguage}
                             onSelect={handleLanguageSelect}
                             placeholder="Language"
+                            disabled={false}
                         />
                         <DropdownButton
                             options={chapterOptions}
                             selectedValue={selectedChapter.toString()}
                             onSelect={handleChapterSelect}
                             placeholder="Chapter"
+                            disabled={isRestrictedMode}
                         />
                         <DropdownButton
                             options={verseOptions}
                             selectedValue={selectedVerseFilter}
                             onSelect={handleVerseSelect}
                             placeholder="Verse"
+                            disabled={isRestrictedMode}
                         />
                     </View>
 
                     {/* Pagination Bar */}
                     <View style={styles.paginationBar}>
                         <TouchableOpacity
-                            style={[styles.paginationButton, (currentPage === 1 || totalPages === 0) && styles.disabledButton]}
+                            style={[
+                                styles.paginationButton,
+                                (currentPage === 1 || totalPages === 0 || isRestrictedMode) && styles.disabledButton
+                            ]}
                             onPress={handlePrev}
-                            disabled={currentPage === 1 || totalPages === 0}
+                            disabled={currentPage === 1 || totalPages === 0 || isRestrictedMode}
                         >
                             <Image source={Icons.arrowIcon} style={[styles.paginationIcon, { transform: [{ rotate: '180deg' }], marginRight: scale(5) }]} resizeMode='contain' />
-                            <ThemedText style={[styles.paginationText, (currentPage === 1 || totalPages === 0) && styles.disabledText]}>Prev</ThemedText>
+                            <ThemedText style={[styles.paginationText, (currentPage === 1 || totalPages === 0 || isRestrictedMode) && styles.disabledText]}>Prev</ThemedText>
                         </TouchableOpacity>
 
                         <View style={styles.pageIndicator}>
@@ -625,11 +666,14 @@ export default function ChapterScreen() {
                         </View>
 
                         <TouchableOpacity
-                            style={[styles.paginationButton, (currentPage === totalPages || totalPages === 0) && styles.disabledButton]}
+                            style={[
+                                styles.paginationButton,
+                                (currentPage === totalPages || totalPages === 0 || isRestrictedMode) && styles.disabledButton
+                            ]}
                             onPress={handleNext}
-                            disabled={currentPage === totalPages || totalPages === 0}
+                            disabled={currentPage === totalPages || totalPages === 0 || isRestrictedMode}
                         >
-                            <ThemedText style={[styles.paginationText, (currentPage === totalPages || totalPages === 0) && styles.disabledText]}>Next</ThemedText>
+                            <ThemedText style={[styles.paginationText, (currentPage === totalPages || totalPages === 0 || isRestrictedMode) && styles.disabledText]}>Next</ThemedText>
                             <Image source={Icons.arrowIcon} style={[styles.paginationIcon, { marginLeft: scale(5) }]} resizeMode='contain' />
                         </TouchableOpacity>
                     </View>
@@ -731,15 +775,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginHorizontal: scale(20),
     },
-    shareButton: {
+    headerSpacer: {
         width: scale(40),
         height: scale(40),
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    shareIcon: {
-        width: scale(20),
-        height: scale(20),
     },
     paginationBar: {
         flexDirection: 'row',

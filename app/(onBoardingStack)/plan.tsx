@@ -5,10 +5,12 @@ import ThemedButton from '@/src/components/ThemedButton';
 import { STRIPE_CONFIG } from '@/src/config/stripe';
 import { colors } from '@/src/constants/Colors';
 import { scale } from '@/src/constants/responsive';
+import { useUser } from '@/src/hooks/useUser';
+import { setPaidReader } from '@/src/redux/features/user';
 import { setSelectedPlan as setSelectedPlanAction } from '@/src/redux/features/userPreferences';
 import { StripeProvider } from '@stripe/stripe-react-native';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
@@ -36,8 +38,17 @@ const plans = [
 const PlanScreen = () => {
     const dispatch = useDispatch();
     const { selectedPlan: savedPlan } = useSelector((state: any) => state.userPreferences);
+    const { isPaidReader } = useUser();
     const [selectedPlan, setSelectedPlan] = useState<string | null>(savedPlan);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+    // Redirect if user is already a paid reader
+    useEffect(() => {
+        if (isPaidReader === true) {
+            console.log('User is already a paid reader, redirecting to main app');
+            router.replace('/(tabs)');
+        }
+    }, [isPaidReader]);
 
     const handlePlanSelect = (planId: string) => {
         setSelectedPlan(planId);
@@ -61,6 +72,11 @@ const PlanScreen = () => {
 
     const handlePaymentSuccess = (paymentData: any) => {
         console.log('Payment successful:', paymentData);
+        console.log('Payment verification:', paymentData.verification);
+
+        // Update user as paid reader
+        dispatch(setPaidReader(true));
+
         setShowPaymentModal(false);
         router.replace('/(tabs)');
     };
