@@ -1,0 +1,139 @@
+---
+globs: *.tsx
+description: "React Native component patterns and best practices"
+---
+
+# Component Patterns
+
+## Component Structure
+Always follow this structure:
+1. Imports
+2. Types/Interfaces
+3. Component
+4. Styles
+5. Export
+
+## Common Component Patterns
+
+### TouchableOpacity with Styling
+```typescript
+<TouchableOpacity style={styles.button} onPress={handlePress}>
+  <ThemedText style={styles.buttonText}>Button Text</ThemedText>
+</TouchableOpacity>
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: scale(20),
+    paddingVertical: scale(12),
+    borderRadius: scale(8),
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: colors.white,
+    fontSize: scale(14),
+    fontWeight: '600',
+  },
+});
+```
+
+### List Items with Cards
+```typescript
+{items.map((item) => (
+  <TouchableOpacity key={item.id} style={styles.listItem}>
+    <View style={styles.itemContent}>
+      <ThemedText style={styles.itemTitle}>{item.title}</ThemedText>
+      <ThemedText style={styles.itemSubtitle}>{item.subtitle}</ThemedText>
+    </View>
+    <View style={styles.arrow}>
+      <ThemedText style={styles.arrowIcon}>→</ThemedText>
+    </View>
+  </TouchableOpacity>
+))}
+```
+
+### Horizontal Scrollable Cards
+```typescript
+<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+  {cards.map((card) => (
+    <TouchableOpacity key={card.id} style={[styles.card, { backgroundColor: card.color }]}>
+      <ThemedText style={styles.cardTitle}>{card.title}</ThemedText>
+      <ThemedText style={styles.cardSubtitle}>{card.subtitle}</ThemedText>
+    </TouchableOpacity>
+  ))}
+</ScrollView>
+```
+
+### Tab Navigation Icons
+```typescript
+import { Icons } from '@/src/assets/icons';
+
+<Image 
+  source={focused ? Icons.activeHome : Icons.inactiveHome} 
+  style={styles.icon} 
+/>
+
+const styles = StyleSheet.create({
+  icon: {
+    width: scale(20),
+    height: scale(20),
+    resizeMode: 'contain',
+  },
+});
+```
+
+## Performance Patterns
+
+### React.memo for Expensive Components
+```typescript
+import React from 'react';
+
+const ExpensiveComponent = React.memo(({ data }: Props) => {
+  return (
+    <View>
+      {/* Component content */}
+    </View>
+  );
+});
+```
+
+### useCallback for Event Handlers
+```typescript
+import { useCallback } from 'react';
+
+const handlePress = useCallback(() => {
+  // Handle press logic
+}, [dependencies]);
+```
+
+### useMemo for Expensive Calculations
+```typescript
+import { useMemo } from 'react';
+
+const expensiveValue = useMemo(() => {
+  return heavyCalculation(data);
+}, [data]);
+```
+
+## Error Handling
+```typescript
+try {
+  const result = await apiCall();
+  return result;
+} catch (error) {
+  console.error('Error:', error);
+  throw new Error('Operation failed');
+}
+```
+
+## Accessibility
+```typescript
+<TouchableOpacity
+  style={styles.button}
+  onPress={handlePress}
+  accessibilityLabel="Button description"
+  accessibilityRole="button"
+>
+  <ThemedText style={styles.buttonText}>Button</ThemedText>
+</TouchableOpacity>
+```

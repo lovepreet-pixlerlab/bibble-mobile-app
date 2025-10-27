@@ -1,0 +1,133 @@
+---
+description: "Development workflow, commands, and code quality guidelines"
+---
+
+# Development Workflow
+
+## Essential Commands
+```bash
+# Start development server
+npm start
+
+# Format code with Prettier
+npm run format
+
+# Check formatting
+npm run format:check
+
+# Fix linting issues
+npm run lint:fix
+
+# Type checking
+npm run type-check
+
+# Install dependencies
+npm install
+```
+
+## Code Quality Standards
+
+### Before Committing
+1. Run `npm run format` to format code
+2. Run `npm run lint:fix` to fix linting issues
+3. Run `npm run type-check` to ensure no TypeScript errors
+4. Test on both iOS and Android
+
+### Code Review Checklist
+- [ ] TypeScript types are properly defined
+- [ ] Styling uses `scale()` function for responsiveness
+- [ ] Colors are imported from constants
+- [ ] Components follow the established structure
+- [ ] Error handling is implemented
+- [ ] Performance optimizations are applied
+- [ ] Code is properly formatted
+- [ ] No console.log statements in production code
+
+## File Creation Guidelines
+When creating new files:
+1. Use `.tsx` for React components
+2. Use `.ts` for TypeScript files
+3. Follow naming conventions (PascalCase for components, camelCase for utilities)
+4. Include proper imports with absolute paths
+5. Add TypeScript types and interfaces
+6. Use responsive scaling with `scale()` function
+7. Use color constants from `@/src/constants/colors`
+
+## Performance Guidelines
+- Use `React.memo` for expensive components
+- Implement proper `useCallback` and `useMemo`
+- Avoid inline functions in render
+- Use proper key props for list items
+- Optimize images and assets
+
+## Error Handling
+```typescript
+try {
+  const result = await apiCall();
+  return result;
+} catch (error) {
+  console.error('API Error:', error);
+  throw new Error('Failed to fetch data');
+}
+```
+
+## Testing Considerations
+- Write unit tests for utility functions
+- Test Redux slices and actions
+- Test component rendering and interactions
+- Use proper TypeScript types in tests
+
+## Security Guidelines
+- Never commit API keys or sensitive data
+- Use environment variables for configuration
+- Validate user inputs
+- Implement proper error boundaries
+
+## Accessibility
+- Use proper semantic elements
+- Add accessibility labels where needed
+- Ensure proper touch targets (minimum 44px)
+- Test with screen readers
+
+## Common Issues and Solutions
+
+### Import Path Issues
+```typescript
+// ❌ Wrong - relative imports
+import { colors } from '../../../constants/colors';
+
+// ✅ Correct - absolute imports
+import { colors } from '@/src/constants/colors';
+```
+
+### TypeScript Errors
+```typescript
+// ❌ Wrong - using any
+const data: any = response.data;
+
+// ✅ Correct - proper typing
+interface ApiResponse {
+  data: User[];
+  status: string;
+}
+const data: ApiResponse = response.data;
+```
+
+### Styling Issues
+```typescript
+// ❌ Wrong - hardcoded values
+const styles = StyleSheet.create({
+  container: {
+    padding: 20,
+    fontSize: 16,
+  },
+});
+
+// ✅ Correct - responsive scaling
+const styles = StyleSheet.create({
+  container: {
+    padding: scale(20),
+    fontSize: scale(16),
+  },
+});
+```

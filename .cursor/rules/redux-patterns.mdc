@@ -1,0 +1,137 @@
+---
+globs: src/redux/**/*.ts
+description: "Redux Toolkit patterns and state management guidelines"
+---
+
+# Redux Patterns
+
+## Redux Toolkit Structure
+Follow this pattern for all Redux slices in [src/redux/features/](mdc:src/redux/features/):
+
+```typescript
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+interface StateType {
+  isLoading: boolean;
+  data: any[];
+  error: string | null;
+}
+
+const initialState: StateType = {
+  isLoading: false,
+  data: [],
+  error: null,
+};
+
+export const sliceName = createSlice({
+  name: 'sliceName',
+  initialState,
+  reducers: {
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+    setData: (state, action: PayloadAction<any[]>) => {
+      state.data = action.payload;
+      state.error = null;
+    },
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+      state.isLoading = false;
+    },
+  },
+});
+
+export const { setLoading, setData, setError } = sliceName.actions;
+export default sliceName.reducer;
+```
+
+## Store Configuration
+Reference the main store in [src/redux/store.ts](mdc:src/redux/store.ts):
+
+```typescript
+import { configureStore } from '@reduxjs/toolkit';
+import { persistStore, persistReducer } from 'redux-persist';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export const store = configureStore({
+  reducer: {
+    global: globalSlice,
+    persist: persistedReducer,
+    [baseApi.reducerPath]: baseApi.reducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }).concat(baseApi.middleware),
+});
+
+export const persistor = persistStore(store);
+```
+
+## RTK Query API Services
+For API services in [src/redux/services/](mdc:src/redux/services/):
+
+```typescript
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+
+export const baseApi = createApi({
+  reducerPath: 'api',
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${baseUrl}/api`,
+    prepareHeaders: async (headers) => {
+      const token = await getSession(STORAGE_KEYS.TOKEN);
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+      return headers;
+    },
+  }),
+  endpoints: () => ({}),
+});
+```
+
+## Using Redux in Components
+```typescript
+import { useDispatch, useSelector } from 'react-redux';
+import { setLoading } from '@/src/redux/features/global';
+
+const MyComponent = () => {
+  const dispatch = useDispatch();
+  const { isLoading } = useSelector((state: RootState) => state.global);
+
+  const handleAction = () => {
+    dispatch(setLoading(true));
+    // Perform action
+    dispatch(setLoading(false));
+  };
+
+  return (
+    <View>
+      {isLoading && <ActivityIndicator />}
+      {/* Component content */}
+    </View>
+  );
+};
+```
+
+## Persist Configuration
+```typescript
+const persistConfig = {
+  key: 'root',
+  storage: AsyncStorage,
+  whitelist: ['persist'], // Only persist specific slices
+};
+```
+
+## TypeScript Integration
+```typescript
+// Define RootState type
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+// Typed hooks
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector = <T>(selector: (state: RootState) => T) => useSelector(selector);
+```

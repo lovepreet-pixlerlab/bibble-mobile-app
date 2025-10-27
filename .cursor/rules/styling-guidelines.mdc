@@ -1,0 +1,131 @@
+---
+globs: *.tsx,*.ts
+description: "Styling guidelines and responsive design patterns"
+---
+
+# Styling Guidelines
+
+## Critical Styling Rules
+1. **Use StyleSheet.create()** for all styles
+2. **Use scale() function** for all dimensions, fonts, and spacing
+3. **Use color constants** from [src/constants/colors.ts](mdc:src/constants/colors.ts)
+4. **Use ThemedText** instead of Text component
+
+## Color Palette
+```typescript
+import { colors } from '@/src/constants/colors';
+
+// Primary color: #A23021 (dark red/maroon)
+// Secondary color: #F5F5F5 (light grey)
+// White: #FFFFFF
+```
+
+## Responsive Scaling
+```typescript
+import { scale } from '@/src/constants/responsive';
+
+const styles = StyleSheet.create({
+  container: {
+    padding: scale(20),        // Responsive padding
+    fontSize: scale(16),       // Responsive font size
+    borderRadius: scale(8),    // Responsive border radius
+  },
+});
+```
+
+## Common Styling Patterns
+
+### Button Styling
+```typescript
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: scale(20),
+    paddingVertical: scale(12),
+    borderRadius: scale(8),
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: colors.white,
+    fontSize: scale(14),
+    fontWeight: '600',
+  },
+});
+```
+
+### Card Styling
+```typescript
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: scale(12),
+    padding: scale(15),
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+});
+```
+
+### Text Styling
+```typescript
+const styles = StyleSheet.create({
+  title: {
+    fontSize: scale(18),
+    fontWeight: 'bold',
+    color: colors.primary,
+    marginBottom: scale(8),
+  },
+  subtitle: {
+    fontSize: scale(14),
+    color: '#666',
+    marginBottom: scale(4),
+  },
+});
+```
+
+## Layout Patterns
+
+### Flexbox Layouts
+```typescript
+const styles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  column: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+```
+
+### ScrollView Styling
+```typescript
+<ScrollView 
+  horizontal 
+  showsHorizontalScrollIndicator={false}
+  style={styles.cardsContainer}
+>
+  {/* Content */}
+</ScrollView>
+
+const styles = StyleSheet.create({
+  cardsContainer: {
+    marginHorizontal: scale(-20),
+    paddingHorizontal: scale(20),
+  },
+});
+```
+
+## ThemedText Usage
+```typescript
+import { ThemedText } from '@/src/components/themed-text';
+
+<ThemedText style={styles.title}>Title</ThemedText>
+<ThemedText style={styles.subtitle}>Subtitle</ThemedText>
+```

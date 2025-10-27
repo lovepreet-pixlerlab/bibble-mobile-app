@@ -1,0 +1,51 @@
+---
+alwaysApply: true
+description: "Project structure and architecture guidelines for BibleNest app"
+---
+
+# BibleNest App - Project Structure
+
+## Project Overview
+This is BibleNest - a React Native/Expo Bible study and spiritual growth application.
+
+## Tech Stack
+- **Framework**: React Native with Expo Router
+- **Language**: TypeScript (strict mode)
+- **State Management**: Redux Toolkit with Redux Persist
+- **Navigation**: Expo Router with file-based routing
+- **Styling**: StyleSheet with responsive scaling
+
+## File Structure
+```
+app/                    # Expo Router pages
+├── (onBoardingStack)/  # Onboarding flow
+│   ├── language.tsx    # Language selection
+│   └── plan.tsx        # Plan selection
+├── (tabs)/            # Main app tabs
+│   ├── index.tsx      # Home screen
+│   ├── search.tsx     # Search screen
+│   ├── like.tsx       # Likes screen
+│   └── setting.tsx    # Settings screen
+└── _layout.tsx        # Root layout
+
+src/                   # Application source code
+├── components/        # Reusable UI components
+│   ├── Loader/        # Global loader component
+│   └── ui/           # Base UI components
+├── redux/            # State management
+│   ├── features/     # Redux slices
+│   ├── services/     # API services
+│   └── store.ts      # Store configuration
+├── constants/        # App constants
+│   ├── colors.ts     # Color palette
+│   └── responsive.ts # Responsive scaling
+├── helper/           # Helper functions
+└── utils/            # Utility functions
+```
+
+## Key Files
+- Main entry: [app/_layout.tsx](mdc:app/_layout.tsx)
+- Home screen: [app/(tabs)/index.tsx](mdc:app/(tabs)/index.tsx)
+- Redux store: [src/redux/store.ts](mdc:src/redux/store.ts)
+- Colors: [src/constants/colors.ts](mdc:src/constants/colors.ts)
+- Responsive: [src/constants/responsive.ts](mdc:src/constants/responsive.ts)

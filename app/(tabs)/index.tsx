@@ -1,98 +1,204 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Icons } from '@/src/assets/icons';
+import { ThemedText } from '@/src/components/themed-text';
+import { colors } from '@/src/constants/Colors';
+import { scale } from '@/src/constants/responsive';
+import { setAvailableLanguages, setSelectedLanguage, setSelectedLanguageInfo } from '@/src/redux/features/userPreferences';
+import { useLazyGetLanguagesQuery } from '@/src/redux/services/modules/userApi';
+import { router } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Image,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useDispatch, useSelector } from 'react-redux';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const dispatch = useDispatch();
+  const [searchText, setSearchText] = useState('');
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  // Get current language state from Redux
+  const { selectedLanguage } = useSelector((state: any) => state.userPreferences);
+
+  // Use lazy query to fetch languages
+  const [getLanguages, { data: response }] = useLazyGetLanguagesQuery();
+
+  // Extract languages from nested response
+  const apiLanguages = (response as any)?.data || [];
+
+  // Fetch languages on component mount
+  React.useEffect(() => {
+    getLanguages(undefined);
+  }, [getLanguages]);
+
+  // Save languages to Redux when API data is available
+  React.useEffect(() => {
+    if (apiLanguages.length > 0) {
+      dispatch(setAvailableLanguages(apiLanguages));
+
+      // Check if current selectedLanguage exists in available languages
+      const currentLanguageExists = apiLanguages.some((lang: any) => lang.code === selectedLanguage);
+
+      if (!currentLanguageExists) {
+
+        // Find English language in available languages
+        const englishLanguage = apiLanguages.find((lang: any) =>
+          lang.code === 'en' ||
+          lang.name?.toLowerCase().includes('english') ||
+          lang.name?.toLowerCase().includes('inglés')
+        );
+
+        if (englishLanguage) {
+          dispatch(setSelectedLanguage(englishLanguage.code));
+          dispatch(setSelectedLanguageInfo(englishLanguage));
+        } else {
+          // If English not found, use the first available language
+          const defaultLanguage = apiLanguages[0];
+          dispatch(setSelectedLanguage(defaultLanguage.code));
+          dispatch(setSelectedLanguageInfo(defaultLanguage));
+        }
+      } else {
+        console.log('✅ Current selected language is valid:', selectedLanguage);
+      }
+    }
+  }, [apiLanguages, dispatch, selectedLanguage]);
+
+  const handleHymnsPress = () => {
+    router.push('/hymns');
+  };
+
+  const handleBiblePress = () => {
+    router.push('/inspired');
+  };
+
+  const handleSearchPress = () => {
+    router.push('/(tabs)/search');
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <ThemedText style={styles.headerTitle}>Tenzi n'Indirimbo za Yesu</ThemedText>
+        <TouchableOpacity style={styles.searchIconButton} onPress={handleSearchPress}>
+          <Image source={Icons.activeSearch} style={styles.searchIcon} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search..."
+          placeholderTextColor={colors.textGrey}
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+      </View>
+
+      {/* Main Action Buttons */}
+      <View style={styles.actionsContainer}>
+        {/* Hymns Button */}
+        <TouchableOpacity style={styles.actionButton} onPress={handleHymnsPress}>
+          <View style={styles.buttonContent}>
+            <View style={styles.iconContainer}>
+              <Image source={Icons.rythemIcon} style={styles.musicIcon} />
+            </View>
+            <ThemedText style={styles.buttonText}>Hymns</ThemedText>
+          </View>
+        </TouchableOpacity>
+
+        {/* Bible Button */}
+        <TouchableOpacity style={styles.actionButton} onPress={handleBiblePress}>
+          <View style={styles.buttonContent}>
+            <View style={styles.iconContainer}>
+              <Image source={Icons.bibbleOutlineIcon} style={styles.bibleIcon} />
+            </View>
+            <ThemedText style={styles.buttonText}>Bible</ThemedText>
+          </View>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: scale(20),
+    paddingVertical: scale(20),
+  },
+  headerTitle: {
+    fontSize: scale(18),
+    fontWeight: 'bold',
+    color: colors.darkGrey,
+    flex: 1,
+  },
+  searchIconButton: {
+    padding: scale(8),
+  },
+  searchIcon: {
+    width: scale(24),
+    height: scale(24),
+    resizeMode: 'contain',
+  },
+  searchContainer: {
+    paddingHorizontal: scale(20),
+    marginBottom: scale(40),
+  },
+  searchInput: {
+    backgroundColor: colors.lightGrey2,
+    borderRadius: scale(8),
+    paddingHorizontal: scale(16),
+    paddingVertical: scale(12),
+    fontSize: scale(16),
+    color: colors.darkGrey,
+  },
+  actionsContainer: {
+    flex: 1,
+    paddingHorizontal: scale(20),
+    justifyContent: 'center',
+  },
+  actionButton: {
+    backgroundColor: colors.primary,
+    borderRadius: scale(12),
+    marginBottom: scale(20),
+    height: scale(80),
+    justifyContent: 'center',
+  },
+  buttonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: scale(20),
+    justifyContent: 'center',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  iconContainer: {
+    marginRight: scale(16),
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  musicIcon: {
+    width: scale(24),
+    height: scale(24),
+    resizeMode: 'contain',
+    tintColor: colors.white,
+  },
+  bibleIcon: {
+    width: scale(24),
+    height: scale(24),
+    resizeMode: 'contain',
+    tintColor: colors.white,
+  },
+  buttonText: {
+    fontSize: scale(18),
+    fontWeight: '600',
+    color: colors.white,
   },
 });

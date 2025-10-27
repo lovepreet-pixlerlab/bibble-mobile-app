@@ -1,0 +1,172 @@
+---
+description: "BibleNest app-specific patterns and components"
+---
+
+# BibleNest App-Specific Patterns
+
+## App Overview
+BibleNest is a Bible study and spiritual growth application with:
+- Onboarding flow (language selection, plan selection)
+- Main app with tabs (Home, Search, Likes, Settings)
+- Bible content and study materials
+- User preferences and progress tracking
+
+## Onboarding Flow
+Located in [app/(onBoardingStack)/](mdc:app/(onBoardingStack)/):
+
+### Language Selection Screen
+```typescript
+// app/(onBoardingStack)/language.tsx
+const languages = [
+  { id: 'en', name: 'English' },
+  { id: 'sw', name: 'Swahili' },
+  { id: 'fr', name: 'French' },
+  { id: 'kr', name: 'Kirundi' },
+];
+
+// Card-based selection with touch feedback
+<TouchableOpacity style={styles.languageOption} onPress={() => handleLanguageSelect(language.id)}>
+  <ThemedText style={styles.languageText}>{language.name}</ThemedText>
+</TouchableOpacity>
+```
+
+### Plan Selection Screen
+```typescript
+// app/(onBoardingStack)/plan.tsx
+const plans = [
+  {
+    id: 'free',
+    title: 'Bible',
+    subtitle: 'Start Your 1-Week Free Trial.',
+    buttonText: 'Free',
+    backgroundColor: '#E8F0FE',
+  },
+  {
+    id: 'premium',
+    title: 'Upgrade to Premium',
+    subtitle: 'Only $7 for lifetime access.',
+    buttonText: 'Pro',
+    backgroundColor: '#4A4AFF',
+  },
+];
+```
+
+## Home Screen Components
+Located in [app/(tabs)/index.tsx](mdc:app/(tabs)/index.tsx):
+
+### Main Banner
+```typescript
+<View style={styles.banner}>
+  <View style={styles.bannerContent}>
+    <ThemedText style={styles.bannerTitle}>The birth of Jesus</ThemedText>
+    <ThemedText style={styles.bannerSubtitle}>All hail the power.</ThemedText>
+    <TouchableOpacity style={styles.readNowButton}>
+      <ThemedText style={styles.readNowText}>Read now</ThemedText>
+    </TouchableOpacity>
+  </View>
+  <View style={styles.bannerImage}>
+    <ThemedText style={styles.bookIcon}>📖</ThemedText>
+  </View>
+</View>
+```
+
+### Be Inspired Cards
+```typescript
+const inspiredCards = [
+  {
+    id: 1,
+    title: 'Verse of the day',
+    subtitle: 'Boost your day',
+    backgroundColor: '#E8D5F2',
+    iconColor: '#4A90E2',
+  },
+  // More cards...
+];
+
+<ScrollView horizontal showsHorizontalScrollIndicator={false}>
+  {inspiredCards.map((card) => (
+    <TouchableOpacity key={card.id} style={[styles.inspiredCard, { backgroundColor: card.backgroundColor }]}>
+      <View style={styles.cardContent}>
+        <View style={styles.cardText}>
+          <ThemedText style={styles.cardTitle}>{card.title}</ThemedText>
+          <ThemedText style={styles.cardSubtitle}>{card.subtitle}</ThemedText>
+        </View>
+        <View style={[styles.cardArrow, { backgroundColor: card.iconColor }]}>
+          <ThemedText style={styles.arrowIcon}>→</ThemedText>
+        </View>
+      </View>
+      <View style={styles.crossIcon}>
+        <ThemedText style={styles.crossText}>✝</ThemedText>
+      </View>
+    </TouchableOpacity>
+  ))}
+</ScrollView>
+```
+
+### Deepen Your Faith List
+```typescript
+const faithItems = [
+  {
+    id: 1,
+    title: 'What does the Bible says?',
+    subtitle: 'The answer is in the Bible',
+  },
+  {
+    id: 2,
+    title: 'What did Jesus say?',
+    subtitle: 'The words of our Lord',
+  },
+];
+
+{faithItems.map((item) => (
+  <TouchableOpacity key={item.id} style={styles.faithItem}>
+    <View style={styles.faithContent}>
+      <ThemedText style={styles.faithTitle}>{item.title}</ThemedText>
+      <ThemedText style={styles.faithSubtitle}>{item.subtitle}</ThemedText>
+    </View>
+    <View style={styles.faithArrow}>
+      <ThemedText style={styles.faithArrowIcon}>→</ThemedText>
+    </View>
+  </TouchableOpacity>
+))}
+```
+
+## Tab Navigation
+Located in [app/(tabs)/_layout.tsx](mdc:app/(tabs)/_layout.tsx):
+
+### Custom Tab Icons
+```typescript
+import { Icons } from '@/src/assets/icons';
+
+// Active state with circular background
+<View style={focused ? styles.activeIconContainer : styles.inactiveIconContainer}>
+  <Image 
+    source={focused ? Icons.activeHome : Icons.inactiveHome} 
+    style={styles.icon} 
+  />
+</View>
+
+const styles = StyleSheet.create({
+  activeIconContainer: {
+    width: scale(45),
+    height: scale(45),
+    borderRadius: scale(70),
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});
+```
+
+## Color Scheme
+Primary color: `#A23021` (dark red/maroon)
+- Used for: Logo, active tab background, buttons, arrows
+- Secondary: `#F5F5F5` (light grey)
+- White: `#FFFFFF`
+
+## Common UI Elements
+- **Cross icons** (✝) as subtle background elements
+- **Book icons** (📖) for Bible content
+- **Arrow indicators** (→) for navigation
+- **Pagination dots** for carousels
+- **Card-based layouts** with rounded corners and shadows

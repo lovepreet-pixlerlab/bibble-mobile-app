@@ -1,0 +1,100 @@
+---
+globs: *.ts,*.tsx
+description: "TypeScript coding standards and best practices"
+---
+
+# TypeScript Standards
+
+## Critical Rules
+1. **ALWAYS use TypeScript** - No JavaScript files except config files
+2. **Use strict typing** - Avoid `any` type, use proper interfaces
+3. **Define interfaces** for all props and state
+4. **Use absolute imports** - `@/src/...` paths, not relative imports
+
+## Import Organization
+```typescript
+// 1. React and React Native imports
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+
+// 2. Third-party libraries
+import { useDispatch } from 'react-redux';
+import { Stack } from 'expo-router';
+
+// 3. Internal imports (absolute paths)
+import { ThemedText } from '@/src/components/themed-text';
+import { colors } from '@/src/constants/colors';
+import { scale } from '@/src/constants/responsive';
+
+// 4. Relative imports (only when necessary)
+import './styles';
+```
+
+## Component Structure Template
+```typescript
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { ThemedText } from '@/src/components/themed-text';
+import { colors } from '@/src/constants/colors';
+import { scale } from '@/src/constants/responsive';
+
+interface Props {
+  title: string;
+  onPress: () => void;
+}
+
+export default function MyComponent({ title, onPress }: Props) {
+  return (
+    <View style={styles.container}>
+      <ThemedText style={styles.title}>{title}</ThemedText>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: scale(20),
+    backgroundColor: colors.white,
+  },
+  title: {
+    fontSize: scale(16),
+    color: colors.primary,
+  },
+});
+```
+
+## Redux TypeScript Pattern
+```typescript
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+interface StateType {
+  isLoading: boolean;
+  data: any[];
+}
+
+const initialState: StateType = {
+  isLoading: false,
+  data: [],
+};
+
+export const sliceName = createSlice({
+  name: 'sliceName',
+  initialState,
+  reducers: {
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
+  },
+});
+
+export const { setLoading } = sliceName.actions;
+export default sliceName.reducer;
+```
+
+## Naming Conventions
+- **Components**: PascalCase (`UserProfile.tsx`, `LoginForm.tsx`)
+- **Hooks**: camelCase starting with 'use' (`useAuth.ts`, `useApi.ts`)
+- **Utils/Helpers**: camelCase (`apiClient.ts`, `validations.ts`)
+- **Constants**: camelCase (`colors.ts`, `responsive.ts`)
+- **Types**: PascalCase (`User.ts`, `ApiResponse.ts`)

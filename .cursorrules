@@ -1,0 +1,286 @@
+# Bibble App - Cursor AI Rules
+
+## Project Overview
+This is a React Native/Expo app called "BibleNest" - a Bible study and spiritual growth application. The app uses Expo Router for navigation, Redux Toolkit for state management, and TypeScript for type safety.
+
+## Tech Stack
+- **Framework**: React Native with Expo Router
+- **Language**: TypeScript (strict mode)
+- **State Management**: Redux Toolkit with Redux Persist
+- **Navigation**: Expo Router with file-based routing
+- **Styling**: StyleSheet with responsive scaling
+- **Icons**: Custom PNG icons and emoji fallbacks
+
+## File Structure & Naming Conventions
+
+### Directory Structure
+```
+app/                    # Expo Router pages
+├── (onBoardingStack)/  # Onboarding flow
+├── (tabs)/            # Main app tabs
+└── _layout.tsx        # Root layout
+
+src/                   # Application source code
+├── components/        # Reusable UI components
+├── redux/            # State management
+│   ├── features/     # Redux slices
+│   ├── services/     # API services
+│   └── store.ts      # Store configuration
+├── constants/        # App constants
+├── helper/           # Helper functions
+└── utils/            # Utility functions
+```
+
+### Naming Conventions
+- **Components**: PascalCase (`UserProfile.tsx`, `LoginForm.tsx`)
+- **Pages**: PascalCase (`HomeScreen.tsx`, `SettingsScreen.tsx`)
+- **Hooks**: camelCase starting with 'use' (`useAuth.ts`, `useApi.ts`)
+- **Utils/Helpers**: camelCase (`apiClient.ts`, `validations.ts`)
+- **Constants**: camelCase (`colors.ts`, `responsive.ts`)
+- **Types**: PascalCase (`User.ts`, `ApiResponse.ts`)
+
+### File Extensions
+- **React Components**: `.tsx` (TypeScript + JSX)
+- **TypeScript Files**: `.ts`
+- **JavaScript Files**: `.js` (only for config files)
+
+## Code Style Guidelines
+
+### Import Organization
+```typescript
+// 1. React and React Native imports
+import React from 'react';
+import { View, Text } from 'react-native';
+
+// 2. Third-party libraries
+import { useDispatch } from 'react-redux';
+import { Stack } from 'expo-router';
+
+// 3. Internal imports (absolute paths)
+import { ThemedView } from '@/src/components/themed-view';
+import { useAuth } from '@/hooks/useAuth';
+
+// 4. Relative imports (only when necessary)
+import './styles';
+```
+
+### Component Structure
+```typescript
+// 1. Imports
+// 2. Types/Interfaces
+// 3. Component
+// 4. Styles
+// 5. Export
+
+interface Props {
+  title: string;
+  onPress: () => void;
+}
+
+export default function MyComponent({ title, onPress }: Props) {
+  // Component logic
+  return (
+    <View style={styles.container}>
+      <Text>{title}</Text>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
+```
+
+### TypeScript Rules
+- **ALWAYS** use TypeScript for new files
+- Define proper interfaces and types
+- Use strict type checking
+- Avoid `any` type - use proper typing
+- Use `PayloadAction<T>` for Redux actions
+
+### Styling Guidelines
+- Use `StyleSheet.create()` for all styles
+- Use `scale()` function from `@/src/constants/responsive` for responsive sizing
+- Use colors from `@/src/constants/colors`
+- Follow the established color scheme:
+  - Primary: `#A23021` (dark red/maroon)
+  - Secondary: `#F5F5F5` (light grey)
+  - White: `#FFFFFF`
+
+## Redux Best Practices
+
+### Slice Structure
+```typescript
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+interface StateType {
+  // Define state interface
+}
+
+const initialState: StateType = {
+  // Initial state
+};
+
+export const sliceName = createSlice({
+  name: 'sliceName',
+  initialState,
+  reducers: {
+    actionName: (state, action: PayloadAction<Type>) => {
+      // Reducer logic
+    },
+  },
+});
+
+export const { actionName } = sliceName.actions;
+export default sliceName.reducer;
+```
+
+## Component Guidelines
+
+### ThemedText Usage
+- Use `ThemedText` from `@/src/components/themed-text` for all text
+- Apply styles directly to ThemedText components
+- Use consistent font sizes with `scale()` function
+
+### TouchableOpacity
+- Use `TouchableOpacity` for interactive elements
+- Add proper `onPress` handlers
+- Use consistent padding and styling
+
+### ScrollView
+- Use `ScrollView` for scrollable content
+- Set `showsVerticalScrollIndicator={false}` for clean appearance
+- Use horizontal ScrollView for card carousels
+
+## App-Specific Patterns
+
+### Tab Navigation
+- Use custom icons from `@/src/assets/icons`
+- Implement active/inactive states with different colors
+- Use `HapticTab` component for haptic feedback
+
+### Onboarding Flow
+- Use `(onBoardingStack)` for onboarding screens
+- Implement language selection and plan selection
+- Use consistent card-based layouts
+
+### Home Screen
+- Implement banner carousel with pagination dots
+- Use horizontal scrollable cards for "Be Inspired" section
+- Use vertical list for "Deepen your Faith" section
+
+## Performance Guidelines
+- Use `React.memo` for expensive components
+- Implement proper `useCallback` and `useMemo`
+- Avoid inline functions in render
+- Use proper key props for list items
+
+## Error Handling
+```typescript
+try {
+  const result = await apiCall();
+  return result;
+} catch (error) {
+  console.error('API Error:', error);
+  throw new Error('Failed to fetch data');
+}
+```
+
+## Common Patterns
+
+### Responsive Design
+```typescript
+import { scale } from '@/src/constants/responsive';
+
+const styles = StyleSheet.create({
+  container: {
+    padding: scale(20),
+    fontSize: scale(16),
+  },
+});
+```
+
+### Color Usage
+```typescript
+import { colors } from '@/src/constants/colors';
+
+const styles = StyleSheet.create({
+  button: {
+    backgroundColor: colors.primary,
+    color: colors.white,
+  },
+});
+```
+
+### Icon Usage
+```typescript
+import { Icons } from '@/src/assets/icons';
+
+<Image 
+  source={focused ? Icons.activeHome : Icons.inactiveHome} 
+  style={styles.icon} 
+/>
+```
+
+## Code Quality Rules
+- Use ESLint and Prettier for code formatting
+- Run `npm run format` before committing
+- Run `npm run type-check` to ensure no TypeScript errors
+- Use meaningful variable and function names
+- Add comments for complex logic
+- Keep components small and focused
+
+## File Creation Guidelines
+- Always create TypeScript files (`.ts` or `.tsx`)
+- Use proper naming conventions
+- Include proper imports and exports
+- Add appropriate TypeScript types
+- Follow the established component structure
+
+## Testing Considerations
+- Write unit tests for utility functions
+- Test Redux slices and actions
+- Test component rendering and interactions
+- Use proper TypeScript types in tests
+
+## Security Guidelines
+- Never commit API keys or sensitive data
+- Use environment variables for configuration
+- Validate user inputs
+- Implement proper error boundaries
+
+## Accessibility
+- Use proper semantic elements
+- Add accessibility labels where needed
+- Ensure proper touch targets (minimum 44px)
+- Test with screen readers
+
+## Common Commands
+```bash
+npm run format        # Format code with Prettier
+npm run lint:fix      # Fix ESLint issues
+npm run type-check    # Check TypeScript errors
+npm start            # Start Expo development server
+```
+
+## When Making Changes
+1. Follow the established file structure
+2. Use TypeScript with proper types
+3. Apply consistent styling with scale() function
+4. Use the established color scheme
+5. Follow the component structure pattern
+6. Add proper error handling
+7. Test on both iOS and Android
+8. Ensure responsive design works on different screen sizes
+
+## Code Review Checklist
+- [ ] TypeScript types are properly defined
+- [ ] Styling uses scale() function for responsiveness
+- [ ] Colors are imported from constants
+- [ ] Components follow the established structure
+- [ ] Error handling is implemented
+- [ ] Performance optimizations are applied
+- [ ] Code is properly formatted
+- [ ] No console.log statements in production code

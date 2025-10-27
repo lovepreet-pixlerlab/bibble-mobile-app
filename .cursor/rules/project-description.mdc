@@ -1,0 +1,51 @@
+---
+alwaysApply: true
+description: "Comprehensive project description for the multilingual Bible and song reading platform"
+---
+
+# Bibble Project - Comprehensive Description
+
+## Project Overview
+This project is a multilingual Bible and song reading platform designed to deliver a seamless reading experience across web and mobile devices. It consists of a Node.js + Express.js + MongoDB backend, a Next.js web frontend, and a React Native (Expo) mobile app. The platform allows users to read Bible verses and Christian songs available in multiple languages—English, Swahili, French, and Kirundi, with the flexibility to add more languages in the future.
+
+## Business Model
+The system operates on a paid-based model, where users can purchase subscriptions to unlock full access to all books, stories, chapters, and verses. Free users, on the other hand, can explore only a limited selection of verses or songs. Each book or song is structured in a clear hierarchy—Product → Story → Chapter → Verse—and all textual content is stored in multilingual format for consistent language support.
+
+## Backend Architecture
+From the backend, administrators can manage content (Bible books, songs, stories, and verses), track user activity, monitor subscription statistics, and view analytics such as active readers and engagement levels. The backend also handles user authentication, purchase validation, access control, and content APIs consumed by both the web and mobile apps.
+
+## Frontend (Next.js Web App)
+On the frontend (Next.js), users can browse, read, and interact with Bible verses and songs through an intuitive interface. Features like liking, sharing, copying text, and adjusting font size enhance the reading experience. The frontend also supports authentication, language switching, and subscription management, all integrated seamlessly with the backend APIs.
+
+## Mobile App (React Native + Expo)
+The mobile app, built using React Native and Expo, mirrors the web functionality while offering features like liking, sharing, copying text, and adjusting font size to enhance the reading experience. The app provides a smooth and responsive experience, allowing users to read and interact with content anytime, anywhere.
+
+## Content Structure
+- **Product**: Top-level category (Bible, Songs)
+- **Story**: Individual books or song collections
+- **Chapter**: Sections within stories
+- **Verse**: Individual verses or song lyrics
+- **Multilingual Support**: All content available in English, Swahili, French, and Kirundi
+
+## Key Features
+- **Multilingual Content**: Support for multiple languages with easy expansion
+- **Subscription Model**: Free tier with limited access, paid tier with full access
+- **Cross-Platform**: Web and mobile apps with consistent experience
+- **User Engagement**: Like, share, copy, and font size adjustment features
+- **Admin Management**: Content management and user analytics
+- **Authentication**: User accounts with subscription management
+- **Responsive Design**: Optimized for all device sizes
+
+## Technology Stack
+- **Backend**: Node.js + Express.js + MongoDB
+- **Web Frontend**: Next.js
+- **Mobile App**: React Native + Expo
+- **Database**: MongoDB
+- **Authentication**: JWT-based authentication
+- **API**: RESTful APIs for content delivery
+
+## Scalability & Future
+The platform is built to scale easily, allowing new languages, books, and features to be added over time, while providing both free and premium readers with a personalized and interactive way to engage with the Bible and songs.
+
+## Development Context
+This is the React Native (Expo) mobile app component of the larger Bibble platform. The app should maintain consistency with the web frontend while providing mobile-optimized features and user experience.
