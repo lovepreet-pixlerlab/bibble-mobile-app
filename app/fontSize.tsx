@@ -80,6 +80,8 @@ const FontSizeScreen = () => {
                         step={1}
                         minimumTrackTintColor={colors.primary}
                         maximumTrackTintColor={colors.lightGrey2}
+                        // thumbStyle={Platform.OS === 'android' ? styles.androidThumb : undefined}
+                        thumbTintColor={colors.primary}
                     />
 
                     <View style={styles.sliderLabels}>
@@ -205,6 +207,11 @@ const styles = StyleSheet.create({
     slider: {
         width: '100%',
         height: scale(40),
+    },
+    androidThumb: {
+        backgroundColor: colors.white,
+        borderWidth: 2,
+        borderColor: colors.primary,
     },
     sliderLabels: {
         flexDirection: 'row',

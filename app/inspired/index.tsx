@@ -119,7 +119,7 @@ export default function InspiredScreen() {
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Image source={Icons.backIcon} style={styles.backIcon} resizeMode='contain' />
                 </TouchableOpacity>
-                <ThemedText style={styles.headerTitle}>Be Inspired</ThemedText>
+                <ThemedText style={styles.headerTitle}>Bible</ThemedText>
                 <View style={styles.headerSpacer} />
             </View>
 

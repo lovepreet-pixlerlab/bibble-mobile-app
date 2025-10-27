@@ -2,9 +2,8 @@ import { Icons } from '@/src/assets/icons';
 import { ThemedText } from '@/src/components/themed-text';
 import { colors } from '@/src/constants/Colors';
 import { scale } from '@/src/constants/responsive';
-import React from 'react';
+import React, { useState } from 'react';
 import {
-    Alert,
     Dimensions,
     Image,
     Modal,
@@ -39,6 +38,8 @@ export const VerseBottomSheet: React.FC<VerseBottomSheetProps> = ({
     storyTitle,
     chapterTitle
 }) => {
+    const [isCopied, setIsCopied] = useState(false);
+
     const handleCopy = async () => {
         try {
             const { Clipboard } = require('react-native');
@@ -63,10 +64,14 @@ export const VerseBottomSheet: React.FC<VerseBottomSheetProps> = ({
             }
 
             await Clipboard.setString(copyText);
-            Alert.alert('Copied!', `Verse ${verseNumber} has been copied to clipboard with context information.`);
+
+            // Change button text to "Copied" for 2 seconds
+            setIsCopied(true);
+            setTimeout(() => {
+                setIsCopied(false);
+            }, 2000);
         } catch (error) {
             console.error('❌ Failed to copy verse:', error);
-            Alert.alert('Error', 'Failed to copy verse to clipboard.');
         }
     };
 
@@ -116,11 +121,16 @@ export const VerseBottomSheet: React.FC<VerseBottomSheetProps> = ({
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={styles.actionButton}
+                                    style={[styles.actionButton, isCopied && styles.copiedButton]}
                                     onPress={handleCopy}
                                 >
-                                    <Image source={Icons.copyIcon} style={styles.actionIcon} />
-                                    <ThemedText style={styles.actionText}>Copy</ThemedText>
+                                    <Image
+                                        source={Icons.copyIcon}
+                                        style={[styles.actionIcon, isCopied && styles.copiedIcon]}
+                                    />
+                                    <ThemedText style={[styles.actionText, isCopied && styles.copiedText]}>
+                                        {isCopied ? 'Copied' : 'Copy'}
+                                    </ThemedText>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -222,6 +232,9 @@ const styles = StyleSheet.create({
     favoriteActive: {
         backgroundColor: colors.primary,
     },
+    copiedButton: {
+        backgroundColor: colors.primary,
+    },
     actionIcon: {
         width: scale(20),
         height: scale(20),
@@ -232,12 +245,18 @@ const styles = StyleSheet.create({
     favoriteIconActive: {
         tintColor: colors.white,
     },
+    copiedIcon: {
+        tintColor: colors.white,
+    },
     actionText: {
         fontSize: scale(14),
         fontWeight: '500',
         color: colors.primary,
     },
     favoriteTextActive: {
+        color: colors.white,
+    },
+    copiedText: {
         color: colors.white,
     },
 });

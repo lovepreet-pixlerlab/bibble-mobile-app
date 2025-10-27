@@ -16,17 +16,13 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarStyle: {
           backgroundColor: 'white',
-          borderTopWidth: 0,
+          borderTopWidth: 1,
+          borderTopColor: '#E5E5E5',
           elevation: 0,
           shadowOpacity: 0,
           height: Platform.OS === 'ios' ? scale(70) : scale(60),
           paddingTop: scale(10),
         },
-        tabBarBackground: () => (
-          <View style={styles.tabBarBackground}>
-            <View style={styles.bottomStrip} />
-          </View>
-        ),
       }}
     >
       <Tabs.Screen
@@ -90,18 +86,6 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  tabBarBackground: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  bottomStrip: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: '#E5E5E5',
-  },
   activeIconContainer: {
     width: scale(45),
     height: scale(45),

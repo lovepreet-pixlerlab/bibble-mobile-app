@@ -140,6 +140,8 @@ export default function LikeScreen() {
 
   const initialLoadRef = useRef(false);
   const isLoadingMoreRef = useRef(false);
+  const lastFetchTimeRef = useRef<number>(0);
+  const retryCountRef = useRef(0);
 
   const limit = 20; // Items per page
 
@@ -159,6 +161,7 @@ export default function LikeScreen() {
       };
 
       await getFavorites(payload);
+      lastFetchTimeRef.current = Date.now();
     } catch (error) {
       console.error('Error fetching favorites:', error);
     }
@@ -207,23 +210,49 @@ export default function LikeScreen() {
     }
   }, [data, currentPage]);
 
-  // Initial load
+  // Initial load with retry mechanism
   useEffect(() => {
     if (!initialLoadRef.current) {
       initialLoadRef.current = true;
-      setCurrentPage(1); // Ensure page is 1 for initial load
+      setCurrentPage(1);
+      setHasMoreData(true);
       fetchFavorites(1);
     }
   }, [fetchFavorites]);
 
-  // Auto-fetch when screen comes into focus
+  // Retry mechanism for initial load if no data after 3 seconds
+  useEffect(() => {
+    if (initialLoadRef.current && favorites.length === 0 && !isLoading && retryCountRef.current < 2) {
+      const timer = setTimeout(() => {
+        retryCountRef.current += 1;
+        setCurrentPage(1);
+        setHasMoreData(true);
+        fetchFavorites(1);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [favorites.length, isLoading, fetchFavorites]);
+
+  // Auto-fetch when screen comes into focus (but not on initial load)
   useFocusEffect(
     useCallback(() => {
-      // Reset to first page and fetch fresh data
-      setCurrentPage(1);
-      setFavorites([]);
-      setHasMoreData(true);
-      fetchFavorites(1);
+      // Skip if this is the initial load (handled by useEffect above)
+      if (!initialLoadRef.current) {
+        return;
+      }
+
+      const now = Date.now();
+      const timeSinceLastFetch = now - lastFetchTimeRef.current;
+      const REFRESH_THRESHOLD = 30000; // 30 seconds
+
+      // Only fetch if it's been more than 30 seconds since last fetch
+      if (timeSinceLastFetch > REFRESH_THRESHOLD) {
+        setCurrentPage(1);
+        setHasMoreData(true);
+        fetchFavorites(1);
+      }
     }, [fetchFavorites])
   );
 
@@ -252,7 +281,6 @@ export default function LikeScreen() {
   // Refresh data
   const handleRefresh = useCallback(() => {
     setCurrentPage(1);
-    setFavorites([]);
     setHasMoreData(true);
     fetchFavorites(1, true);
   }, [fetchFavorites]);
