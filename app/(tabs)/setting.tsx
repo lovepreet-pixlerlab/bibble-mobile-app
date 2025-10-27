@@ -25,7 +25,7 @@ const SettingScreen = () => {
     const { userName, userEmail, isPaidReader } = useUser();
 
     const handleEditProfile = () => {
-        console.log('Edit Profile pressed');
+        router.push('/editProfile');
     };
 
     const handleFontSize = () => {

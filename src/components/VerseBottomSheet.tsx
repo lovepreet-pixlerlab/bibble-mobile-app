@@ -7,11 +7,13 @@ import {
     Dimensions,
     Image,
     Modal,
+    ScrollView,
     StyleSheet,
     TouchableOpacity,
     TouchableWithoutFeedback,
     View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface VerseBottomSheetProps {
     visible: boolean;
@@ -39,6 +41,7 @@ export const VerseBottomSheet: React.FC<VerseBottomSheetProps> = ({
     chapterTitle
 }) => {
     const [isCopied, setIsCopied] = useState(false);
+    const insets = useSafeAreaInsets();
 
     const handleCopy = async () => {
         try {
@@ -101,12 +104,17 @@ export const VerseBottomSheet: React.FC<VerseBottomSheetProps> = ({
                             </View>
 
                             {/* Verse Content */}
-                            <View style={styles.content}>
+                            <ScrollView
+                                style={styles.content}
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={styles.contentContainer}
+                                nestedScrollEnabled={true}
+                            >
                                 <ThemedText style={styles.verseText}>{verseText}</ThemedText>
-                            </View>
+                            </ScrollView>
 
                             {/* Action Buttons */}
-                            <View style={styles.actionsContainer}>
+                            <View style={[styles.actionsContainer, /* { paddingBottom: insets.bottom } */]}>
                                 <TouchableOpacity
                                     style={[styles.actionButton, isLiked && styles.favoriteActive]}
                                     onPress={() => onLike(verseId)}
@@ -151,8 +159,8 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderTopLeftRadius: scale(20),
         borderTopRightRadius: scale(20),
-        maxHeight: screenHeight * 0.6,
-        minHeight: screenHeight * 0.3,
+        maxHeight: screenHeight * 0.8,
+        minHeight: screenHeight * 0.4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.25,
@@ -198,19 +206,22 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
         paddingHorizontal: scale(20),
+    },
+    contentContainer: {
         paddingVertical: scale(20),
+        paddingBottom: scale(10),
     },
     verseText: {
         fontSize: scale(16),
         lineHeight: scale(24),
         color: colors.textGrey,
         textAlign: 'left',
+        flexWrap: 'wrap',
     },
     actionsContainer: {
         flexDirection: 'row',
         paddingHorizontal: scale(20),
-        paddingVertical: scale(16),
-        paddingBottom: scale(20),
+        paddingVertical: scale(8),
         backgroundColor: 'transparent',
     },
     actionButton: {

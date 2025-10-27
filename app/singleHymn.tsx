@@ -7,7 +7,7 @@ import { setLoaderStatus } from '@/src/redux/features/global';
 import { setSelectedLanguage, setSelectedLanguageInfo } from '@/src/redux/features/userPreferences';
 import { callApiMethod } from '@/src/redux/services/callApimethod';
 import { useAddToFavoritesMutation, useLazyGetSingleHymnQuery, useRemoveFromFavoritesMutation } from '@/src/redux/services/modules/userApi';
-import { processHymnContentToLines } from '@/src/utils/htmlUtils';
+import { cleanHtmlContent, processHymnContentToLines } from '@/src/utils/htmlUtils';
 import { showErrorToast, showSuccessToast } from '@/src/utils/toast';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -19,7 +19,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 
 interface HymnData {
@@ -40,6 +40,7 @@ interface HymnData {
 
 const SingleHymnScreen = () => {
     const dispatch = useDispatch();
+    const insets = useSafeAreaInsets();
     const params = useLocalSearchParams();
     const hymnId = params.id as string || params.hymnId as string; // Handle both naming conventions
     const hymnTitle = params.title as string || params.hymnTitle as string; // Handle both naming conventions
@@ -222,11 +223,13 @@ const SingleHymnScreen = () => {
     // Extract title and content based on selected language
     const currentLanguage = selectedLanguage || 'en'; // Default to English if null
 
-    const displayTitle = hymnData?.title
+    const rawTitle = hymnData?.title
         ? (typeof hymnData.title === 'object'
             ? (hymnData.title[currentLanguage] || hymnData.title.en || hymnData.title.english || Object.values(hymnData.title)[0] || 'Untitled')
             : hymnData.title)
         : hymnTitle || 'Loading...';
+
+    const displayTitle = cleanHtmlContent(rawTitle);
 
 
 
@@ -492,7 +495,7 @@ const SingleHymnScreen = () => {
             </ScrollView>
 
             {/* Footer Actions */}
-            <View style={styles.footer}>
+            <View style={[styles.footer, { paddingBottom: scale(20) + insets.bottom }]}>
                 <TouchableOpacity
                     style={[styles.actionButton, isFavorite && styles.favoriteActive]}
                     onPress={handleFavoritePress}
@@ -612,9 +615,7 @@ const styles = StyleSheet.create({
         right: 0,
         paddingHorizontal: scale(20),
         paddingVertical: scale(16),
-        paddingBottom: scale(20), // Add extra padding for safe area
         backgroundColor: 'transparent',
-
     },
     actionButton: {
         flex: 1,

@@ -3,10 +3,10 @@ import { ThemedText } from '@/src/components/themed-text';
 import { colors } from '@/src/constants/Colors';
 import { scale } from '@/src/constants/responsive';
 import { useLazyGetHymnsQuery } from '@/src/redux/services/modules/userApi';
+import { cleanHtmlContent } from '@/src/utils/htmlUtils';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
     FlatList,
     Image,
     StyleSheet,
@@ -19,9 +19,8 @@ import { useSelector } from 'react-redux';
 interface HymnItem {
     _id: string;
     id: string;
-    title: any; // Object with language translations
-    description: any; // Object with language translations
-    text: any; // Object with language translations for hymn content
+    title: any; // Object with language translations (contains HTML)
+    description: any; // Object with language translations (contains HTML)
     contentType: string;
     type: string;
     status: string;
@@ -53,23 +52,15 @@ const HymnsScreen = () => {
 
     // State for hymns data
     const [hymns, setHymns] = useState<HymnItem[]>([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [hasNextPage, setHasNextPage] = useState(true);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
-    const [searchText, setSearchText] = useState('');
     const [contentType] = useState<string>('hymn');
     const [sortBy] = useState<string>('title');
     const [sortOrder] = useState<string>('asc');
 
     // Ref to track if initial load has been done
     const initialLoadDone = useRef(false);
-    // Ref to track search timeout
-    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // Ref to track if load more is in progress
-    const isLoadingMoreRef = useRef(false);
 
     // Lazy query for hymns
-    const [getHymns, { isLoading, error }] = useLazyGetHymnsQuery();
+    const [getHymns] = useLazyGetHymnsQuery();
 
     // Fetch hymns function - stable reference
     const fetchHymns = useCallback(async (page: number = 1, search: string = '', reset: boolean = false) => {
@@ -88,35 +79,18 @@ const HymnsScreen = () => {
 
             if (response.success) {
                 const newHymns = response.data; // Data is directly an array, not nested under 'hymns'
-                const pagination = response.pagination; // Pagination is at root level
-
-
 
                 if (reset || page === 1) {
                     setHymns(newHymns);
                 } else {
                     setHymns(prev => [...prev, ...newHymns]);
                 }
-
-                setCurrentPage(pagination.page);
-                setHasNextPage(pagination.hasNextPage);
-
-            } else {
             }
         } catch (error) {
             console.error('❌ Failed to fetch hymns:', error);
-        } finally {
-            setIsLoadingMore(false);
-            isLoadingMoreRef.current = false;
         }
     }, [getHymns, contentType, sortBy, sortOrder]);
 
-    // Debug: Log loading and error states
-    useEffect(() => {
-        console.log('🎵 Loading state changed:', isLoading);
-        console.log('🎵 Error state:', error);
-        console.log('🎵 Hymns count:', hymns.length);
-    }, [isLoading, error, hymns.length]);
 
     // Load initial hymns only once on mount
     useEffect(() => {
@@ -125,28 +99,6 @@ const HymnsScreen = () => {
             fetchHymns(1, '', true);
         }
     }, []); // Empty dependency array - only run once on mount
-
-    // Search handler with debounce - separate from initial load
-    useEffect(() => {
-        // Clear previous timeout
-        if (searchTimeoutRef.current) {
-            clearTimeout(searchTimeoutRef.current);
-        }
-
-        if (searchText === '') {
-            return; // Don't refetch if search is empty
-        }
-
-        searchTimeoutRef.current = setTimeout(() => {
-            fetchHymns(1, searchText, true);
-        }, 500);
-
-        return () => {
-            if (searchTimeoutRef.current) {
-                clearTimeout(searchTimeoutRef.current);
-            }
-        };
-    }, [searchText]); // Only depend on searchText - remove fetchHymns dependency
 
     const handleBackPress = () => {
         router.back();
@@ -169,95 +121,91 @@ const HymnsScreen = () => {
             }
         };
 
-        console.log('🎵 HymnsScreen - Navigation params:', navigationParams);
-        console.log('🎵 HymnsScreen - Navigating to singleHymn with hymnId:', hymn._id);
 
         router.push(navigationParams);
     };
 
     // Load more hymns when reaching the end
-    const handleLoadMore = () => {
-        if (hasNextPage && !isLoadingMore && !isLoading && !isLoadingMoreRef.current) {
-            isLoadingMoreRef.current = true;
-            setIsLoadingMore(true);
-            fetchHymns(currentPage + 1, searchText, false);
-        }
-    };
+    // const handleLoadMore = () => {
+    //     if (hasNextPage && !isLoadingMore && !isLoading && !isLoadingMoreRef.current) {
+    //         isLoadingMoreRef.current = true;
+    //         setIsLoadingMore(true);
+    //         fetchHymns(currentPage + 1, searchText, false);
+    //     }
+    // };
 
     // Handle search text change
-    const handleSearchChange = (text: string) => {
-        setSearchText(text);
-    };
+    // const handleSearchChange = (text: string) => {
+    //     setSearchText(text);
+    // };
 
     const renderHymnItem = ({ item }: { item: HymnItem }) => {
-        console.log('🎵 HymnsScreen - Rendering hymn item:', item);
-
         // Extract title from language object using selected language
-        const displayTitle = typeof item.title === 'object'
+        const rawTitle = typeof item.title === 'object'
             ? (item.title[selectedLanguage] || item.title.en || item.title.english || Object.values(item.title)[0] || 'Untitled')
             : item.title;
 
-        console.log('🎵 HymnsScreen - Render display title:', displayTitle);
+        // Clean HTML from title
+        const displayTitle = cleanHtmlContent(rawTitle);
 
         return (
             <TouchableOpacity
                 style={styles.hymnItem}
-                onPress={() => {
-                    console.log('🎵 HymnsScreen - Hymn item pressed:', item._id);
-                    handleHymnPress(item);
-                }}
+                onPress={() => handleHymnPress(item)}
             >
-                <ThemedText style={styles.hymnTitle}>{displayTitle}</ThemedText>
+                <View style={styles.hymnContent}>
+                    <ThemedText style={styles.hymnTitle}>{displayTitle}</ThemedText>
+                </View>
                 <Image source={Icons.arrowIcon} style={styles.arrowIcon} />
             </TouchableOpacity>
         );
     };
 
-    const renderFooter = () => {
-        if (isLoadingMore) {
-            return (
-                <View style={styles.loadingFooter}>
-                    <ActivityIndicator size="small" color={colors.primary} />
-                    <ThemedText style={styles.loadingText}>Loading more hymns...</ThemedText>
-                </View>
-            );
-        }
-        return null;
-    };
+    // const renderFooter = () => {
+    //     if (isLoadingMore) {
+    //         return (
+    //             <View style={styles.loadingFooter}>
+    //                 <ActivityIndicator size="small" color={colors.primary} />
+    //                 <ThemedText style={styles.loadingText}>Loading more hymns...</ThemedText>
+    //             </View>
+    //         );
+    //     }
+    //     return null;
+    // };
 
-    const renderEmptyState = () => {
-        if (isLoading) {
-            return (
-                <View style={styles.emptyState}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-                    <ThemedText style={styles.emptyText}>Loading hymns...</ThemedText>
-                </View>
-            );
-        }
+    // const renderEmptyState = () => {
+    //     if (isLoading) {
+    //         return (
+    //             <View style={styles.emptyState}>
+    //                 <ActivityIndicator size="large" color={colors.primary} />
+    //                 <ThemedText style={styles.emptyText}>Loading hymns...</ThemedText>
+    //             </View>
+    //         );
+    //     }
 
-        if (error) {
-            return (
-                <View style={styles.emptyState}>
-                    <ThemedText style={styles.errorText}>Failed to load hymns</ThemedText>
-                    <TouchableOpacity style={styles.retryButton} onPress={() => fetchHymns(1, searchText, true)}>
-                        <ThemedText style={styles.retryText}>Retry</ThemedText>
-                    </TouchableOpacity>
-                </View>
-            );
-        }
+    //     if (error) {
+    //         return (
+    //             <View style={styles.emptyState}>
+    //                 <ThemedText style={styles.errorText}>Failed to load hymns</ThemedText>
+    //                 <TouchableOpacity style={styles.retryButton} onPress={() => fetchHymns(1, searchText, true)}>
+    //                     <ThemedText style={styles.retryText}>Retry</ThemedText>
+    //                 </TouchableOpacity>
+    //             </View>
+    //         );
+    //     }
 
-        if (hymns.length === 0) {
-            return (
-                <View style={styles.emptyState}>
-                    <ThemedText style={styles.emptyText}>
-                        {searchText ? 'No hymns found matching your search' : 'No hymns available'}
-                    </ThemedText>
-                </View>
-            );
-        }
+    //     if (hymns.length === 0) {
+    //         return (
+    //             <View style={styles.emptyState}>
+    //                 <ThemedText style={styles.emptyText}>
+    //                     {searchText ? 'No hymns found matching your search' : 'No hymns available'}
+    //                 </ThemedText>
+    //             </View>
+    //         );
+    //     }
 
-        return null;
-    };
+    //     return null;
+    // };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -355,11 +303,14 @@ const styles = StyleSheet.create({
         paddingVertical: scale(16),
         backgroundColor: colors.white,
     },
+    hymnContent: {
+        flex: 1,
+        marginRight: scale(12),
+    },
     hymnTitle: {
         fontSize: scale(16),
         color: colors.darkGrey,
         fontWeight: '600',
-        flex: 1,
     },
     arrowIcon: {
         width: scale(16),

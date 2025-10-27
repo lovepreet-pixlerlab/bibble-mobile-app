@@ -62,6 +62,7 @@ export default function RootLayout() {
           <Stack.Screen name="singleHymn" options={{ headerShown: false }} />
           <Stack.Screen name="fontSize" options={{ headerShown: false }} />
           <Stack.Screen name="changePassword" options={{ headerShown: false }} />
+          <Stack.Screen name="editProfile" options={{ headerShown: false }} />
           <Stack.Screen name="inspired/index" options={{ headerShown: false }} />
           <Stack.Screen name="chapterScreen/index" options={{ headerShown: false }} />
           <Stack.Screen

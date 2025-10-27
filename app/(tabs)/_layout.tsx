@@ -6,9 +6,37 @@ import { HapticTab } from '@/src/components/haptic-tab';
 
 import { colors } from '@/src/constants/Colors';
 import { scale } from '@/src/constants/responsive';
-import { Image, Platform, StyleSheet, View } from 'react-native';
+import { useSegments } from 'expo-router';
+import { useEffect } from 'react';
+import { BackHandler, Image, Platform, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
+  const segments = useSegments();
+  const insets = useSafeAreaInsets();
+
+  // Handle back button behavior
+  useEffect(() => {
+    const backAction = () => {
+      // Get current route segments
+      const currentRoute = segments.join('/');
+
+      // If on home tab (index), close the app
+      if (currentRoute === '(tabs)' || currentRoute === '(tabs)/index') {
+        // Close the app
+        BackHandler.exitApp();
+        return true;
+      }
+
+      // For other tabs, prevent going back to auth screens
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+
+    return () => backHandler.remove();
+  }, [segments]);
+
   return (
     <Tabs
       screenOptions={{
@@ -20,8 +48,9 @@ export default function TabLayout() {
           borderTopColor: '#E5E5E5',
           elevation: 0,
           shadowOpacity: 0,
-          height: Platform.OS === 'ios' ? scale(70) : scale(60),
+          height: Platform.OS === 'ios' ? scale(70) + insets.bottom : scale(60) + insets.bottom,
           paddingTop: scale(10),
+          paddingBottom: insets.bottom,
         },
       }}
     >

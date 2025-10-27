@@ -23,6 +23,7 @@ const apiEndPointes = {
   // Payment Endpoints
   createOrder: '/user/create-order',
   verifyPayment: '/user/verify-payment',
+  updateAccount: '/user/update-account',
 };
 
 export { apiEndPointes };
