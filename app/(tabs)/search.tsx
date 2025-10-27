@@ -123,20 +123,14 @@ export default function SearchScreen() {
   };
 
   const handleHymnPress = (hymn: any) => {
-    console.log('🔍 SearchScreen - handleHymnPress called with hymn:', hymn);
-
     // Save current search term to Redux persist (only if meaningful)
     const trimmedSearch = searchText.trim();
     if (trimmedSearch && trimmedSearch.length >= 2) {
       dispatch(addToSearchHistory(trimmedSearch));
-      console.log('🔍 SearchScreen - Search term saved to history:', trimmedSearch);
     }
 
     // Extract hymn title using localization
     const hymnTitle = getLocalizedText(hymn.product.title, 'Hymn');
-    console.log('🔍 SearchScreen - Extracted hymn title:', hymnTitle);
-    console.log('🔍 SearchScreen - Selected language:', selectedLanguage);
-    console.log('🔍 SearchScreen - Hymn product title object:', hymn.product.title);
 
     const navigationParams = {
       pathname: '/singleHymn',
@@ -145,10 +139,6 @@ export default function SearchScreen() {
         hymnTitle: hymnTitle
       }
     };
-
-    console.log('🔍 SearchScreen - Navigation params:', navigationParams);
-    console.log('🔍 SearchScreen - Navigating to singleHymn with productId:', hymn.product._id);
-    console.log('🔍 SearchScreen - Navigation source: search screen');
 
     // Navigate to single hymn screen
     router.push(navigationParams);
@@ -304,19 +294,12 @@ export default function SearchScreen() {
 
   // Hymn Result Component (Inspired Screen Design)
   const HymnResultItem = ({ hymn }: { hymn: any }) => {
-    console.log('🔍 SearchScreen - Rendering hymn result item:', hymn);
-
     const displayTitle = getLocalizedText(hymn.product.title, 'Hymn');
-    console.log('🔍 SearchScreen - Hymn result display title:', displayTitle);
 
     return (
       <TouchableOpacity
         style={styles.hymnResultItem}
-        onPress={() => {
-          console.log('🔍 SearchScreen - Hymn result item pressed:', hymn._id);
-          console.log('🔍 SearchScreen - Product ID (will be sent):', hymn.product._id);
-          handleHymnPress(hymn);
-        }}
+        onPress={() => handleHymnPress(hymn)}
       >
         <View style={styles.hymnHeader}>
           <ThemedText style={styles.hymnTitle}>

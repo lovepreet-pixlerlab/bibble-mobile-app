@@ -47,7 +47,7 @@ const SingleHymnScreen = () => {
 
 
     // Determine navigation source based on parameter names
-    const navigationSource = params.hymnId ? 'search screen' : 'hymns screen';
+    // const navigationSource = params.hymnId ? 'search screen' : 'hymns screen';
 
     // Get selected language and available languages from Redux persist
     const { selectedLanguage, availableLanguages } = useSelector((state: any) => state.userPreferences);
@@ -59,15 +59,15 @@ const SingleHymnScreen = () => {
 
     // Check if languages are properly persisted
     if (availableLanguages && availableLanguages.length > 0) {
-        console.log('✅ Languages successfully loaded from Redux Persist');
+        // Languages successfully loaded from Redux Persist
     } else {
-        console.warn('⚠️ No languages found in Redux Persist - may need to fetch from API first');
+        // No languages found in Redux Persist - may need to fetch from API first
     }
 
     const [isFavorite, setIsFavorite] = useState(false);
     const [favoriteId, setFavoriteId] = useState<string | null>(null);
     const [hymnData, setHymnData] = useState<HymnData | null>(null);
-    const [productId, setProductId] = useState<string | null>(null);
+    // const [productId, setProductId] = useState<string | null>(null);
     const [hymnDataId, setHymnDataId] = useState<string | null>(null);
 
     // Lazy query for single hymn
@@ -88,15 +88,10 @@ const SingleHymnScreen = () => {
 
     // Handle API response
     useEffect(() => {
-        console.log('📦 SingleHymnScreen - API response useEffect triggered');
-        console.log('📦 SingleHymnScreen - Data received:', data);
-        console.log('📦 SingleHymnScreen - Loading state:', isLoading);
-        console.log('📦 SingleHymnScreen - Error state:', error);
 
         try {
             if (data) {
                 const response = data as any;
-                console.log('📦 SingleHymnScreen - Full API Response:', response);
 
                 // Validate response structure
                 if (!response || typeof response !== 'object') {
@@ -110,15 +105,13 @@ const SingleHymnScreen = () => {
                     const product = response.data.product || {};
 
                     // Store productId from the product object
-                    if (product._id) {
-                        setProductId(product._id);
-                        console.log('📦 Product ID stored:', product._id);
-                    }
+                    // if (product._id) {
+                    //     setProductId(product._id);
+                    // }
 
                     // Store hymn data ID from the first verse
                     if (allVerses.length > 0 && allVerses[0]._id) {
                         setHymnDataId(allVerses[0]._id);
-                        console.log('🎵 Hymn Data ID stored:', allVerses[0]._id);
                     }
 
                     // Validate verses array
@@ -180,16 +173,8 @@ const SingleHymnScreen = () => {
                         createdAt: firstVerse.createdAt || new Date().toISOString(),
                     };
 
-                    console.log('🔄 Mapped Hymn Data:', mappedHymnData);
                     setHymnData(mappedHymnData);
 
-                    // Debug: Log the product object to see favorite status
-                    console.log('🔍 Product object:', product);
-                    console.log('🔍 Product.isFav:', product?.isFav);
-                    console.log('🔍 All verses favorite status:', allVerses.map((verse: any) => ({
-                        verseId: verse._id,
-                        isFav: verse.isFav
-                    })));
 
                     // Set favorite state based on isFav from API response
                     // Check both product and verses for favorite status
@@ -197,24 +182,20 @@ const SingleHymnScreen = () => {
                     let favoriteIdValue = null;
 
                     if (favoriteStatus) {
-                        console.log('❤️ Hymn is already favorited (from product):', favoriteStatus);
                         favoriteIdValue = favoriteStatus._id || favoriteStatus.id;
                     } else {
                         // Check if any verse is favorited
                         const favoritedVerse = allVerses.find((verse: any) => verse.isFav);
                         if (favoritedVerse) {
-                            console.log('❤️ Hymn is already favorited (from verse):', favoritedVerse.isFav);
                             favoriteStatus = favoritedVerse.isFav;
                             favoriteIdValue = favoriteStatus._id || favoriteStatus.id;
                         } else {
-                            console.log('💔 Hymn is not favorited');
                         }
                     }
 
                     setIsFavorite(!!favoriteStatus);
                     setFavoriteId(favoriteIdValue);
                 } else {
-                    console.log('❌ No data found in response:', response);
                 }
             }
         } catch (error) {
@@ -253,14 +234,14 @@ const SingleHymnScreen = () => {
 
     // Debug: Show all text content for each language
     if (hymnData?.content && typeof hymnData.content === 'object') {
-        console.log('🌍 All Text Content by Language:');
-        Object.entries(hymnData.content).forEach(([lang, text]) => {
-            console.log(`  ${lang}:`, text);
+        // Log all text content by language
+        Object.entries(hymnData.content).forEach(([,]) => {
+            // Log language content
         });
 
         // Show the selected language content specifically
         if (hymnData.content[currentLanguage]) {
-            console.log(`🎯 Selected Language (${currentLanguage}) Content:`, hymnData.content[currentLanguage]);
+            // Log selected language content
         }
     }
 
@@ -301,8 +282,8 @@ const SingleHymnScreen = () => {
         router.back();
     };
 
-    const onFavoriteSuccess = (data: any) => {
-        console.log('✅ Successfully added to favorites:', data);
+    const onFavoriteSuccess = () => {
+        // Successfully added to favorites
         showSuccessToast('Added to favorites!');
         setIsFavorite(true);
         // Store the favorite ID from the response
@@ -311,8 +292,8 @@ const SingleHymnScreen = () => {
         }
     };
 
-    const onRemoveFavoriteSuccess = (data: any) => {
-        console.log('✅ Successfully removed from favorites:', data);
+    const onRemoveFavoriteSuccess = () => {
+        // Successfully removed from favorites
         showSuccessToast('Removed from favorites!');
         setIsFavorite(false);
         setFavoriteId(null);
@@ -335,11 +316,11 @@ const SingleHymnScreen = () => {
 
             if (isFavorite && favoriteId) {
                 // Remove from favorites
-                console.log('💔 Removing hymn from favorites:', favoriteId);
+                // Removing hymn from favorites
                 await callApiMethod(removeFromFavorites, onRemoveFavoriteSuccess, onFavoriteError, favoriteId);
             } else {
                 // Add to favorites
-                console.log('❤️ Adding hymn to favorites:', hymnDataId);
+                // Adding hymn to favorites
                 const payload = {
                     hymnId: hymnDataId,
                 };
@@ -364,7 +345,7 @@ const SingleHymnScreen = () => {
 
             // Find current language index
             const currentIndex = availableLanguages.findIndex((lang: any) => lang.code === currentLanguage);
-            console.log('Current language index:', currentIndex);
+            // Current language index
 
             // Get next language (cycle to first if at end)
             const nextIndex = (currentIndex + 1) % availableLanguages.length;
@@ -422,7 +403,7 @@ const SingleHymnScreen = () => {
                     <TouchableOpacity
                         style={styles.retryButton}
                         onPress={() => {
-                            console.log('🔄 Retrying API call with hymnId:', hymnId);
+                            // Retrying API call with hymnId
                             getSingleHymn(hymnId);
                         }}
                     >
@@ -514,14 +495,7 @@ const SingleHymnScreen = () => {
             <View style={styles.footer}>
                 <TouchableOpacity
                     style={[styles.actionButton, isFavorite && styles.favoriteActive]}
-                    onPress={() => {
-                        console.log('💖 Favorite button pressed:', {
-                            isFavorite: isFavorite,
-                            favoriteId: favoriteId,
-                            hymnId: hymnId
-                        });
-                        handleFavoritePress();
-                    }}
+                    onPress={handleFavoritePress}
                 >
                     <Image
                         source={isFavorite ? Icons.activeLike : Icons.inactiveLike}

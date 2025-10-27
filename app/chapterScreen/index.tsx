@@ -70,13 +70,6 @@ export default function ChapterScreen() {
     const chapterId = params.chapterId as string;
 
     // Debug: Log navigation parameters
-    console.log('📋 ChapterScreen received params:', {
-        storyId: storyId,
-        storyTitle: storyTitle,
-        verseId: verseId,
-        chapterId: chapterId,
-        allParams: params
-    });
 
     // Get selected language and available languages from Redux persist
     const { selectedLanguage, availableLanguages } = useSelector((state: any) => state.userPreferences);
@@ -146,14 +139,14 @@ export default function ChapterScreen() {
 
     // Fetch stories on component mount
     useEffect(() => {
-        console.log('📚 Fetching stories');
+        // Fetching stories
         getStories({});
     }, [getStories]);
 
     // Fetch chapters when story changes
     useEffect(() => {
         if (selectedStory) {
-            console.log('📖 Fetching chapters for storyId:', selectedStory);
+            // Fetching chapters for storyId
             getChapters(selectedStory);
             // Reset chapter to first when story changes
             setCurrentPage(1);
@@ -166,11 +159,11 @@ export default function ChapterScreen() {
         if (storiesData) {
             try {
                 const response = storiesData as any;
-                console.log('📚 Stories API Response:', response);
+                // Stories API Response
 
                 if (response.success && response.data) {
                     const storiesList = response.data || [];
-                    console.log('📚 Stories found:', storiesList.length);
+                    // Stories found
                     setStories(storiesList);
                 }
             } catch (error) {

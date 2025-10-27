@@ -5,8 +5,10 @@ import ThemedInput from '@/src/components/ThemedInput';
 import { colors } from '@/src/constants/Colors';
 import { scale } from '@/src/constants/responsive';
 import { setLoaderStatus } from '@/src/redux/features/global';
+import { updateUser } from '@/src/redux/features/user';
 import { callApiMethod } from '@/src/redux/services/callApimethod';
 import { useChangePasswordMutation } from '@/src/redux/services/modules/authApi';
+import { setSession, STORAGE_KEYS } from '@/src/utils/localStorage';
 import { showErrorToast, showSuccessToast } from '@/src/utils/toast';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
@@ -88,15 +90,33 @@ const ChangePasswordScreen = () => {
         }
     };
 
-    const onChangePasswordSuccess = (data: any) => {
-        console.log('onChangePasswordSuccess', data);
-        showSuccessToast(data?.message || 'Password changed successfully!');
-        // Navigate back to settings
-        router.back();
+    const onChangePasswordSuccess = async (data: any) => {
+        try {
+            // Check if the response contains a new token
+            if (data?.token) {
+                // Save the new token to storage
+                await setSession(STORAGE_KEYS.TOKEN, data.token);
+                // New token saved after password change
+            }
+
+            // Check if the response contains updated user data
+            if (data?.user) {
+                // Update user data in Redux store
+                dispatch(updateUser(data.user));
+            }
+
+            showSuccessToast(data?.message || 'Password changed successfully!');
+            // Navigate back to settings
+            router.back();
+        } catch (error) {
+            // Error saving new token or updating user data
+            // Still show success message even if saving fails
+            showSuccessToast(data?.message || 'Password changed successfully!');
+            router.back();
+        }
     };
 
     const onChangePasswordError = (data: any) => {
-        console.log('onChangePasswordError', data);
         showErrorToast(data?.data?.message || 'Failed to change password. Please try again.');
     };
 
@@ -114,11 +134,11 @@ const ChangePasswordScreen = () => {
                 newPassword: formData.newPassword,
             };
 
-            console.log('Change password payload:', payload);
+            // Change password payload
             await callApiMethod(changePasswordMutation, onChangePasswordSuccess, onChangePasswordError, payload);
 
         } catch (error) {
-            console.error('Change password error:', error);
+            // Change password error
             showErrorToast('Failed to change password. Please try again.');
         } finally {
             dispatch(setLoaderStatus(false));

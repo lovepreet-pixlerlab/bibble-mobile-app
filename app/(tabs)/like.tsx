@@ -263,7 +263,7 @@ export default function LikeScreen() {
       // Navigate to single hymn screen with productId
       const title = getLocalizedText(item.hymnId.productId?.title, 'Unknown Hymn');
       const productId = item.hymnId.productId._id;
-      
+
       const navigationParams = {
         pathname: '/singleHymn',
         params: {
